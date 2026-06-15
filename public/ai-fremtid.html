@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spå AI-fremtiden · Vivicta</title>
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --teal: #0F6E56;
+    --teal-light: #E1F5EE;
+    --teal-mid: #1D9E75;
+    --teal-dark: #085041;
+    --amber: #BA7517;
+    --amber-light: #FAEEDA;
+    --text: #1a1a1a;
+    --text-muted: #6b6b6b;
+    --border: rgba(0,0,0,0.1);
+    --bg: #ffffff;
+    --surface: #f8f8f6;
+    --mono: 'JetBrains Mono', 'Fira Code', monospace;
+  }
+
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'Inter', system-ui, sans-serif; }
+
+  .screen { display: none; min-height: 100vh; flex-direction: column; }
+  .screen.active { display: flex; }
+
+  /* HOST SCREEN */
+  .host { padding: 2rem; max-width: 700px; margin: 0 auto; width: 100%; }
+  .host-header { display: flex; align-items: baseline; gap: 12px; margin-bottom: 2rem; border-bottom: 0.5px solid var(--border); padding-bottom: 1.5rem; }
+  .host-logo { font-family: var(--mono); font-size: 13px; color: var(--teal); }
+  .host-title { font-size: 22px; font-weight: 500; }
+
+  .qr-box { background: var(--surface); border: 0.5px solid var(--border); border-radius: 16px; padding: 2rem; display: flex; gap: 2rem; align-items: center; margin-bottom: 2rem; }
+  .qr-wrap { background: white; padding: 12px; border-radius: 12px; border: 0.5px solid var(--border); flex-shrink: 0; }
+  .qr-info h2 { font-size: 16px; font-weight: 500; margin-bottom: 6px; }
+  .qr-info p { font-size: 13px; color: var(--text-muted); line-height: 1.6; }
+  .qr-url { font-family: var(--mono); font-size: 12px; color: var(--teal); margin-top: 8px; word-break: break-all; }
+
+  .players-section h3 { font-family: var(--mono); font-size: 11px; color: var(--text-muted); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 12px; }
+  .players-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; margin-bottom: 1.5rem; min-height: 60px; }
+  .player-chip { background: var(--teal-light); border-radius: 8px; padding: 8px 12px; display: flex; align-items: center; gap: 8px; }
+  .player-avatar { width: 28px; height: 28px; border-radius: 50%; background: var(--teal); color: white; font-size: 11px; font-weight: 500; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .player-name { font-size: 13px; font-weight: 500; color: var(--teal-dark); }
+
+  .waiting { font-size: 13px; color: var(--text-muted); font-family: var(--mono); padding: 12px 0; }
+
+  .start-btn { width: 100%; padding: 14px; background: var(--teal); color: white; border: none; border-radius: 12px; font-size: 15px; font-weight: 500; cursor: pointer; transition: background 0.15s; }
+  .start-btn:hover { background: var(--teal-dark); }
+  .start-btn:disabled { opacity: 0.4; cursor: default; }
+
+  /* QUESTION HOST VIEW */
+  .q-host { padding: 2rem; max-width: 700px; margin: 0 auto; width: 100%; }
+  .progress-bar-wrap { background: var(--surface); border-radius: 99px; height: 6px; margin-bottom: 2rem; overflow: hidden; }
+  .progress-bar-fill { height: 100%; background: var(--teal); border-radius: 99px; transition: width 0.4s ease; }
+  .q-number { font-family: var(--mono); font-size: 11px; color: var(--text-muted); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 8px; }
+  .q-text-big { font-size: 20px; font-weight: 500; line-height: 1.4; margin-bottom: 8px; }
+  .q-tag { font-family: var(--mono); font-size: 11px; color: var(--teal); background: var(--teal-light); padding: 3px 10px; border-radius: 99px; display: inline-block; margin-bottom: 1.5rem; }
+  .options-grid { display: grid; grid-template-columns: 1fr; gap: 8px; margin-bottom: 1.5rem; }
+  .option-row { background: var(--surface); border: 0.5px solid var(--border); border-radius: 12px; padding: 12px 16px; display: flex; align-items: center; gap: 12px; }
+  .option-row.leading { border-color: var(--teal); background: var(--teal-light); }
+  .opt-letter { font-family: var(--mono); font-size: 12px; color: var(--teal); width: 20px; }
+  .opt-text { flex: 1; font-size: 14px; }
+  .opt-bar-wrap { width: 120px; height: 6px; background: var(--border); border-radius: 99px; overflow: hidden; }
+  .opt-bar { height: 100%; background: var(--teal); border-radius: 99px; transition: width 0.4s; }
+  .opt-pct { font-family: var(--mono); font-size: 12px; color: var(--teal); width: 36px; text-align: right; }
+  .votes-live { font-size: 13px; color: var(--text-muted); font-family: var(--mono); margin-bottom: 1.5rem; }
+  .host-nav { display: flex; gap: 10px; }
+  .btn-sec { flex: 1; padding: 12px; border: 0.5px solid var(--border); border-radius: 12px; background: transparent; color: var(--text-muted); font-size: 14px; cursor: pointer; }
+  .btn-pri { flex: 2; padding: 12px; background: var(--teal); color: white; border: none; border-radius: 12px; font-size: 14px; font-weight: 500; cursor: pointer; }
+
+  /* PLAYER REGISTER */
+  .player-reg { padding: 2rem 1.5rem; max-width: 420px; margin: 0 auto; width: 100%; display: flex; flex-direction: column; gap: 1.5rem; }
+  .reg-logo { font-family: var(--mono); font-size: 12px; color: var(--teal); }
+  .reg-title { font-size: 24px; font-weight: 500; }
+  .reg-sub { font-size: 14px; color: var(--text-muted); }
+  .reg-input { width: 100%; padding: 14px 16px; border: 1.5px solid var(--border); border-radius: 12px; font-size: 16px; background: var(--bg); color: var(--text); outline: none; }
+  .reg-input:focus { border-color: var(--teal); }
+  .reg-btn { width: 100%; padding: 14px; background: var(--teal); color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: 500; cursor: pointer; }
+
+  /* PLAYER WAITING */
+  .player-wait { padding: 2rem 1.5rem; max-width: 420px; margin: 0 auto; width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; gap: 1.5rem; text-align: center; }
+  .wait-avatar { width: 72px; height: 72px; border-radius: 50%; background: var(--teal-light); color: var(--teal); font-size: 24px; font-weight: 500; display: flex; align-items: center; justify-content: center; }
+  .wait-name { font-size: 20px; font-weight: 500; }
+  .wait-sub { font-size: 14px; color: var(--text-muted); }
+  .pulse { width: 12px; height: 12px; border-radius: 50%; background: var(--teal); animation: pulse 1.4s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(0.8)} }
+
+  /* PLAYER VOTING */
+  .player-vote { padding: 1.5rem; max-width: 420px; margin: 0 auto; width: 100%; }
+  .pv-progress { display: flex; gap: 4px; margin-bottom: 1.5rem; }
+  .pv-dot { flex: 1; height: 4px; border-radius: 99px; background: var(--border); }
+  .pv-dot.done { background: var(--teal); }
+  .pv-dot.active { background: var(--teal-mid); }
+  .pv-q { font-size: 18px; font-weight: 500; line-height: 1.4; margin-bottom: 8px; }
+  .pv-tag { font-family: var(--mono); font-size: 11px; color: var(--teal); margin-bottom: 1.5rem; }
+  .pv-options { display: flex; flex-direction: column; gap: 10px; }
+  .pv-opt { padding: 14px 16px; border: 1.5px solid var(--border); border-radius: 12px; font-size: 15px; background: var(--bg); color: var(--text); cursor: pointer; text-align: left; transition: all 0.15s; }
+  .pv-opt:hover { border-color: var(--teal); }
+  .pv-opt.chosen { background: var(--teal-light); border-color: var(--teal); color: var(--teal-dark); font-weight: 500; }
+  .pv-voted { text-align: center; padding: 2rem; }
+  .pv-voted p { font-size: 14px; color: var(--text-muted); font-family: var(--mono); }
+
+  /* RESULTS */
+  .results { padding: 2rem; max-width: 700px; margin: 0 auto; width: 100%; }
+  .res-header { font-size: 22px; font-weight: 500; margin-bottom: 0.5rem; }
+  .res-sub { font-size: 14px; color: var(--text-muted); margin-bottom: 2rem; }
+  .winner-card { background: var(--teal-light); border: 0.5px solid var(--teal); border-radius: 16px; padding: 1.5rem; margin-bottom: 2rem; display: flex; align-items: center; gap: 1rem; }
+  .winner-badge { font-size: 28px; }
+  .winner-name { font-size: 20px; font-weight: 500; color: var(--teal-dark); }
+  .winner-score { font-family: var(--mono); font-size: 13px; color: var(--teal); }
+  .scoreboard { display: flex; flex-direction: column; gap: 8px; margin-bottom: 2rem; }
+  .score-row { display: flex; align-items: center; gap: 12px; padding: 10px 14px; background: var(--surface); border-radius: 10px; }
+  .score-rank { font-family: var(--mono); font-size: 13px; color: var(--text-muted); width: 24px; }
+  .score-av { width: 36px; height: 36px; border-radius: 50%; background: var(--teal); color: white; font-size: 12px; font-weight: 500; display: flex; align-items: center; justify-content: center; }
+  .score-name { flex: 1; font-size: 14px; font-weight: 500; }
+  .score-pts { font-family: var(--mono); font-size: 13px; color: var(--teal); }
+  .q-summary { display: flex; flex-direction: column; gap: 8px; }
+  .qs-card { background: var(--surface); border-radius: 12px; padding: 14px; }
+  .qs-q { font-size: 13px; font-weight: 500; margin-bottom: 6px; }
+  .qs-answer { font-size: 12px; color: var(--teal); font-family: var(--mono); }
+</style>
+</head>
+<body>
+
+<!-- HOST: LOBBY -->
+<div class="screen active" id="screen-host-lobby">
+  <div class="host">
+    <div class="host-header">
+      <span class="host-logo">// vivicta AI seanse</span>
+      <span class="host-title">Spå AI-fremtiden</span>
+    </div>
+    <div class="qr-box">
+      <div class="qr-wrap" id="qr-code"></div>
+      <div class="qr-info">
+        <h2>Scan for å delta</h2>
+        <p>Alle i rommet scanner QR-koden og registrerer seg. Du ser dem dukke opp under.</p>
+        <div class="qr-url" id="qr-url-text"></div>
+      </div>
+    </div>
+    <div class="players-section">
+      <h3>// deltakere (<span id="player-count">0</span>)</h3>
+      <div class="players-grid" id="players-grid">
+        <div class="waiting">Venter på deltakere...</div>
+      </div>
+    </div>
+    <button class="start-btn" id="start-btn" onclick="hostStartGame()" disabled>
+      Start leken →
+    </button>
+  </div>
+</div>
+
+<!-- HOST: QUESTION VIEW -->
+<div class="screen" id="screen-host-question">
+  <div class="q-host">
+    <div class="progress-bar-wrap">
+      <div class="progress-bar-fill" id="host-progress"></div>
+    </div>
+    <div class="q-number" id="host-q-num"></div>
+    <div class="q-text-big" id="host-q-text"></div>
+    <div class="q-tag" id="host-q-tag"></div>
+    <div class="votes-live" id="host-votes-live"></div>
+    <div class="options-grid" id="host-options"></div>
+    <div class="host-nav">
+      <button class="btn-sec" onclick="hostPrev()">← Forrige</button>
+      <button class="btn-pri" id="host-next-btn" onclick="hostNext()">Neste →</button>
+    </div>
+  </div>
+</div>
+
+<!-- HOST: RESULTS -->
+<div class="screen" id="screen-host-results">
+  <div class="results">
+    <div class="res-header">Fasit — slik spådde dere fremtiden</div>
+    <div class="res-sub" id="res-sub"></div>
+    <div class="winner-card" id="winner-card"></div>
+    <div class="scoreboard" id="scoreboard"></div>
+    <h3 style="font-family:var(--mono);font-size:11px;color:var(--text-muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:12px;">// spørsmål og flertall</h3>
+    <div class="q-summary" id="q-summary"></div>
+  </div>
+</div>
+
+<!-- PLAYER: REGISTER -->
+<div class="screen" id="screen-player-reg">
+  <div class="player-reg">
+    <div class="reg-logo">// vivicta AI seanse · 2026</div>
+    <div class="reg-title">Spå AI-fremtiden</div>
+    <div class="reg-sub">Registrer deg for å delta i leken</div>
+    <input class="reg-input" id="player-name-input" type="text" placeholder="Ditt navn..." maxlength="24" autofocus />
+    <button class="reg-btn" onclick="playerRegister()">Bli med →</button>
+  </div>
+</div>
+
+<!-- PLAYER: WAITING -->
+<div class="screen" id="screen-player-wait">
+  <div class="player-wait">
+    <div class="wait-avatar" id="wait-avatar"></div>
+    <div class="wait-name" id="wait-name"></div>
+    <div class="pulse"></div>
+    <div class="wait-sub">Venter på at verten starter leken...</div>
+  </div>
+</div>
+
+<!-- PLAYER: VOTING -->
+<div class="screen" id="screen-player-vote">
+  <div class="player-vote">
+    <div class="pv-progress" id="pv-progress"></div>
+    <div class="pv-q" id="pv-q-text"></div>
+    <div class="pv-tag" id="pv-q-tag"></div>
+    <div class="pv-options" id="pv-options"></div>
+  </div>
+</div>
+
+<!-- PLAYER: RESULTS -->
+<div class="screen" id="screen-player-results">
+  <div class="results">
+    <div class="res-header">Ferdig!</div>
+    <div class="res-sub" id="player-res-sub"></div>
+    <div class="winner-card" id="player-winner-card"></div>
+    <div class="scoreboard" id="player-scoreboard"></div>
+  </div>
+</div>
+
+<script>
+const questions = [
+  { text: "Kan AI skrive en komplett D365 FO-implementering uten menneskelig hjelp?", tag: "erp · implementering", options: ["Ja, fullt ut", "Delvis — med veiledning", "Nei, ikke ennå"] },
+  { text: "Vil AI erstatte rollen som senior ERP-konsulent?", tag: "kompetanse · roller", options: ["Ja, fullstendig", "Delvis — nye roller vokser frem", "Nei — aldri"] },
+  { text: "Kan AI gjennomføre periodestenging i D365 autonomt?", tag: "agentic ERP · automatisering", options: ["Ja, rutinemessig", "I enkle tilfeller", "Nei — for komplekst"] },
+  { text: "Vil kundene forvente AI-drevet ERP som standard om 2 år?", tag: "marked · forventninger", options: ["Ja, absolutt", "Hos early adopters", "Nei — for tidlig"] },
+  { text: "Kan AI ta beslutninger i en M&A-integrasjon av to ERP-systemer?", tag: "kompleksitet · risiko", options: ["Ja, med tilsyn", "Bare anbefalinger", "Nei — for sensitiv"] },
+  { text: "Vil Copilot Studio erstatte tradisjonell Power Platform-utvikling?", tag: "copilot · power platform", options: ["Ja, i stor grad", "Supplement, ikke erstatter", "Nei — for begrenset"] },
+  { text: "Kan AI skrive en fullstendig kravspesifikasjon fra et møtereferat?", tag: "dokumentasjon · analyse", options: ["Ja, produksjonsklar", "Utkast som må justeres", "Nei — mangler kontekst"] },
+  { text: "Vil norske selskaper ha AI-ansvarlig (Chief AI Officer) som standard om 2 år?", tag: "organisasjon · ledelse", options: ["Ja, i de fleste", "Bare i tech-selskaper", "Nei — for tidlig"] },
+  { text: "Kan AI oppdage og varsle om regnskapssvindel i sanntid via ERP?", tag: "finans · compliance", options: ["Ja, pålitelig nok", "Delvis — som flagg", "Nei — for mange falske alarmer"] },
+  { text: "Om 2 år — er AI-satsingen til Microsoft Dynamics en fordel eller trussel for oss som konsulenter?", tag: "strategi · fremtid", options: ["Stor fordel", "Begge deler", "Potensiell trussel"] }
+];
+
+let state = {
+  mode: 'host',
+  players: {},
+  votes: {},
+  currentQ: 0,
+  gameStarted: false,
+  gameEnded: false,
+  myName: '',
+  myVotes: {}
+};
+
+function initials(name) {
+  return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function isHost() {
+  return !window.location.search.includes('player');
+}
+
+window.onload = function() {
+  const url = window.location.href.split('?')[0] + '?player=1';
+  document.getElementById('qr-url-text').textContent = url;
+
+  if (typeof QRCode !== 'undefined') {
+    new QRCode(document.getElementById('qr-code'), {
+      text: url,
+      width: 140,
+      height: 140,
+      colorDark: '#0F6E56',
+      colorLight: '#ffffff',
+      correctLevel: QRCode.CorrectLevel.M
+    });
+  }
+
+  if (window.location.search.includes('player')) {
+    state.mode = 'player';
+    showScreen('screen-player-reg');
+  } else {
+    state.mode = 'host';
+    showScreen('screen-host-lobby');
+    pollState();
+  }
+};
+
+function saveState() {
+  localStorage.setItem('ai_game_state', JSON.stringify(state));
+}
+
+function loadState() {
+  const s = localStorage.getItem('ai_game_state');
+  if (s) state = JSON.parse(s);
+}
+
+function pollState() {
+  if (state.mode !== 'host') return;
+  loadState();
+  renderLobby();
+  if (state.gameStarted && !state.gameEnded) {
+    showScreen('screen-host-question');
+    renderHostQuestion();
+  } else if (state.gameEnded) {
+    showScreen('screen-host-results');
+    renderHostResults();
+  }
+  setTimeout(pollState, 1200);
+}
+
+function pollPlayerState() {
+  loadState();
+  if (state.gameEnded) {
+    showScreen('screen-player-results');
+    renderPlayerResults();
+    return;
+  }
+  if (state.gameStarted) {
+    showScreen('screen-player-vote');
+    renderPlayerVote();
+  }
+  setTimeout(pollPlayerState, 1200);
+}
+
+function renderLobby() {
+  const players = Object.values(state.players);
+  document.getElementById('player-count').textContent = players.length;
+  const grid = document.getElementById('players-grid');
+  if (players.length === 0) {
+    grid.innerHTML = '<div class="waiting">Venter på deltakere...</div>';
+  } else {
+    grid.innerHTML = players.map(p => `
+      <div class="player-chip">
+        <div class="player-avatar">${initials(p.name)}</div>
+        <div class="player-name">${p.name}</div>
+      </div>
+    `).join('');
+  }
+  document.getElementById('start-btn').disabled = players.length < 1;
+}
+
+function playerRegister() {
+  const name = document.getElementById('player-name-input').value.trim();
+  if (!name) return;
+  loadState();
+  const id = 'p_' + Date.now();
+  state.players[id] = { id, name, score: 0 };
+  state.myId = id;
+  state.myName = name;
+  saveState();
+  localStorage.setItem('my_player_id', id);
+  localStorage.setItem('my_player_name', name);
+  document.getElementById('wait-avatar').textContent = initials(name);
+  document.getElementById('wait-name').textContent = name;
+  showScreen('screen-player-wait');
+  pollPlayerState();
+}
+
+function hostStartGame() {
+  loadState();
+  state.gameStarted = true;
+  state.currentQ = 0;
+  state.votes = {};
+  saveState();
+  showScreen('screen-host-question');
+  renderHostQuestion();
+}
+
+function renderHostQuestion() {
+  loadState();
+  const q = questions[state.currentQ];
+  const total = questions.length;
+  document.getElementById('host-progress').style.width = ((state.currentQ + 1) / total * 100) + '%';
+  document.getElementById('host-q-num').textContent = `// spørsmål ${state.currentQ + 1} av ${total}`;
+  document.getElementById('host-q-text').textContent = q.text;
+  document.getElementById('host-q-tag').textContent = q.tag;
+
+  const qVotes = state.votes[state.currentQ] || {};
+  const totalVotes = Object.values(qVotes).reduce((a, b) => a + b, 0);
+  const totalPlayers = Object.keys(state.players).length;
+  document.getElementById('host-votes-live').textContent = `${totalVotes} av ${totalPlayers} har stemt`;
+
+  const maxV = Math.max(...q.options.map((_, i) => qVotes[i] || 0), 1);
+  document.getElementById('host-options').innerHTML = q.options.map((o, i) => {
+    const v = qVotes[i] || 0;
+    const pct = totalVotes > 0 ? Math.round(v / totalVotes * 100) : 0;
+    const leading = v === maxV && v > 0;
+    return `<div class="option-row ${leading ? 'leading' : ''}">
+      <div class="opt-letter">${String.fromCharCode(65 + i)}</div>
+      <div class="opt-text">${o}</div>
+      <div class="opt-bar-wrap"><div class="opt-bar" style="width:${pct}%"></div></div>
+      <div class="opt-pct">${pct}%</div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('host-next-btn').textContent = state.currentQ === total - 1 ? 'Se resultater →' : 'Neste →';
+
+  setTimeout(() => { if (state.gameStarted && !state.gameEnded) renderHostQuestion(); }, 1500);
+}
+
+function hostPrev() {
+  if (state.currentQ > 0) { state.currentQ--; saveState(); renderHostQuestion(); }
+}
+
+function hostNext() {
+  loadState();
+  if (state.currentQ < questions.length - 1) {
+    state.currentQ++;
+    saveState();
+    renderHostQuestion();
+  } else {
+    calcScores();
+    state.gameEnded = true;
+    saveState();
+    showScreen('screen-host-results');
+    renderHostResults();
+  }
+}
+
+function calcScores() {
+  Object.keys(state.players).forEach(pid => {
+    state.players[pid].score = 0;
+  });
+  questions.forEach((_, qi) => {
+    const qVotes = state.votes[qi] || {};
+    const maxV = Math.max(...Object.values(qVotes), 0);
+    if (maxV === 0) return;
+    const winningIdx = Object.keys(qVotes).find(k => qVotes[k] === maxV);
+    Object.keys(state.players).forEach(pid => {
+      const playerVotes = state.playerVotes || {};
+      const pv = playerVotes[pid] || {};
+      if (String(pv[qi]) === String(winningIdx)) {
+        state.players[pid].score = (state.players[pid].score || 0) + 1;
+      }
+    });
+  });
+}
+
+function renderHostResults() {
+  loadState();
+  const players = Object.values(state.players).sort((a, b) => b.score - a.score);
+  const winner = players[0];
+  document.getElementById('res-sub').textContent = `${players.length} deltakere · ${questions.length} spørsmål`;
+  document.getElementById('winner-card').innerHTML = `
+    <div class="winner-badge">🏆</div>
+    <div><div class="winner-name">${winner ? winner.name : '—'}</div>
+    <div class="winner-score">${winner ? winner.score : 0} av ${questions.length} rette svar</div></div>`;
+  document.getElementById('scoreboard').innerHTML = players.map((p, i) => `
+    <div class="score-row">
+      <div class="score-rank">${i + 1}</div>
+      <div class="score-av">${initials(p.name)}</div>
+      <div class="score-name">${p.name}</div>
+      <div class="score-pts">${p.score} pts</div>
+    </div>`).join('');
+  document.getElementById('q-summary').innerHTML = questions.map((q, qi) => {
+    const qVotes = state.votes[qi] || {};
+    const total = Object.values(qVotes).reduce((a, b) => a + b, 0) || 1;
+    let maxI = 0, maxV = 0;
+    q.options.forEach((_, i) => { if ((qVotes[i] || 0) > maxV) { maxV = qVotes[i] || 0; maxI = i; } });
+    const pct = Math.round(maxV / total * 100);
+    return `<div class="qs-card">
+      <div class="qs-q">${q.text}</div>
+      <div class="qs-answer">Flertall: ${q.options[maxI]} (${pct}%)</div>
+    </div>`;
+  }).join('');
+}
+
+function renderPlayerVote() {
+  loadState();
+  const myId = localStorage.getItem('my_player_id');
+  const qi = state.currentQ;
+  const q = questions[qi];
+  const myVotes = (state.playerVotes || {})[myId] || {};
+  const alreadyVoted = myVotes[qi] !== undefined;
+
+  document.getElementById('pv-progress').innerHTML = questions.map((_, i) => {
+    let cls = i < qi ? 'done' : i === qi ? 'active' : '';
+    return `<div class="pv-dot ${cls}"></div>`;
+  }).join('');
+
+  document.getElementById('pv-q-text').textContent = q.text;
+  document.getElementById('pv-q-tag').textContent = '// ' + q.tag;
+
+  document.getElementById('pv-options').innerHTML = alreadyVoted
+    ? `<div class="pv-voted"><p>Stemt! Venter på neste spørsmål...</p></div>`
+    : q.options.map((o, i) => `
+      <button class="pv-opt" onclick="playerVote(${i})">${o}</button>
+    `).join('');
+}
+
+function playerVote(optIdx) {
+  loadState();
+  const myId = localStorage.getItem('my_player_id');
+  const qi = state.currentQ;
+  if (!state.playerVotes) state.playerVotes = {};
+  if (!state.playerVotes[myId]) state.playerVotes[myId] = {};
+  if (state.playerVotes[myId][qi] !== undefined) return;
+  state.playerVotes[myId][qi] = optIdx;
+  if (!state.votes[qi]) state.votes[qi] = {};
+  state.votes[qi][optIdx] = (state.votes[qi][optIdx] || 0) + 1;
+  saveState();
+  renderPlayerVote();
+}
+
+function renderPlayerResults() {
+  loadState();
+  const players = Object.values(state.players).sort((a, b) => b.score - a.score);
+  const winner = players[0];
+  const myId = localStorage.getItem('my_player_id');
+  const me = state.players[myId];
+  document.getElementById('player-res-sub').textContent = `Du fikk ${me ? me.score : 0} av ${questions.length} rette`;
+  document.getElementById('player-winner-card').innerHTML = `
+    <div class="winner-badge">🏆</div>
+    <div><div class="winner-name">${winner ? winner.name : '—'}</div>
+    <div class="winner-score">${winner ? winner.score : 0} av ${questions.length}</div></div>`;
+  document.getElementById('player-scoreboard').innerHTML = players.map((p, i) => `
+    <div class="score-row ${p.id === myId ? 'style="background:#E1F5EE"' : ''}">
+      <div class="score-rank">${i + 1}</div>
+      <div class="score-av">${initials(p.name)}</div>
+      <div class="score-name">${p.name}</div>
+      <div class="score-pts">${p.score} pts</div>
+    </div>`).join('');
+}
+</script>
+</body>
+</html>
