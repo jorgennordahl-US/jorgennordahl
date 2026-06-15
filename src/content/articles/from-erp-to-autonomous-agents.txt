@@ -1,0 +1,23 @@
+---
+title: From ERP to autonomous agents
+date: jun 2025
+tag: ai
+excerpt: How modern ERP systems become the backbone for autonomous AI agents.
+---
+
+Modern ERP systems are no longer just systems of record. They are becoming the foundation for autonomous AI agents that can act, decide and coordinate across an entire organization.
+
+## The shift
+
+Traditional ERP implementation focuses on data entry and reporting. AI-first ERP flips this: the system becomes a source of truth that agents can query, reason over and act upon.
+
+## What this means in practice
+
+An AI agent connected to Dynamics 365 can:
+- Close a period without manual intervention
+- Flag variance anomalies before a human notices
+- Coordinate approval workflows autonomously
+
+## The bottleneck is not the AI
+
+The biggest obstacle is not the language model. It is the data model. Organizations with clean, canonical data in Dataverse are ready for agents today. Those without it are not.
