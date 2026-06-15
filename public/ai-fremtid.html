@@ -3,495 +3,808 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Spå AI-fremtiden · Vivicta</title>
+<title>Spå AI-fremtiden 🔮</title>
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getDatabase, ref, set, get, onValue, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBLdfpZ_WyCB64KbZ2eaEqKfC6XXF0Km7U",
+    authDomain: "vivicta-ai-game.firebaseapp.com",
+    databaseURL: "https://vivicta-ai-game-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "vivicta-ai-game",
+    storageBucket: "vivicta-ai-game.firebasestorage.app",
+    messagingSenderId: "773671473181",
+    appId: "1:773671473181:web:24e0c0209e0fae9afb36f4"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+
+  const QUESTIONS = [
+    {
+      q: "Vil AI om 2 år kunne erstatte en erfaren ERP-konsulent på et standard D365-prosjekt?",
+      options: ["Ja, 100%", "Delvis – de enkle tingene", "Nei, ikke uten mennesker"]
+    },
+    {
+      q: "Kan AI om 2 år gjennomføre en komplett periodestenging i D365 uten menneskelig innblanding?",
+      options: ["Ja, fullt automatisk", "Nesten – trenger litt hjelp", "Nei, for komplekst"]
+    },
+    {
+      q: "Vil AI om 2 år kunne skrive og teste egendefinert X++ kode i D365 FO?",
+      options: ["Ja, bedre enn oss", "Ja, men vi må qualitysikre", "Nei, trenger utviklere"]
+    },
+    {
+      q: "Hvor mye av Vivictas tjenestekatalog vil AI kunne levere automatisk om 2 år?",
+      options: ["Over 50%", "20–50%", "Under 20%"]
+    },
+    {
+      q: "Vil AI-agenter om 2 år kjøre kundestøtte for D365 uten at kunden merker det?",
+      options: ["Ja, usynlig AI", "Delvis – AI + menneske", "Nei, kunder vil merke det"]
+    },
+    {
+      q: "Hva skjer med antall ERP-konsulenter i Norden om 2 år?",
+      options: ["Færre – AI tar over", "Omtrent samme antall", "Flere – etterspørselen øker"]
+    },
+    {
+      q: "Vil AI om 2 år klare å lede en kundeWorkshop og samle krav alene?",
+      options: ["Ja, bedre enn mange", "Kanskje med fasilitator", "Nei, trenger ekte mennesker"]
+    },
+    {
+      q: "Vil AI om 2 år klare å lage en komplett tilbudsrespons for et D365-anbud?",
+      options: ["Ja, komplett", "Ja, men vi finjusterer", "Nei, for strategisk"]
+    },
+    {
+      q: "Hva vil være den største utfordringen med AI i ERP om 2 år?",
+      options: ["Tillit og godkjenning", "Teknisk modenhet", "Kunder er ikke klare"]
+    },
+    {
+      q: "Hvem i rommet tror du bruker AI mest aktivt i jobben sin om 2 år?",
+      options: ["Konsulentene", "Salg og marked", "Leder og strategi"]
+    }
+  ];
+
+  const urlParams = new URLSearchParams(window.location.search);
+  const isPlayer = urlParams.has('join');
+  const GAME_REF = 'game1';
+
+  window.dbRef = (path) => ref(db, `${GAME_REF}/${path}`);
+  window.dbSet = set;
+  window.dbGet = get;
+  window.dbUpdate = update;
+  window.onValue = onValue;
+  window.QUESTIONS = QUESTIONS;
+  window.isPlayer = isPlayer;
+  window.db = db;
+  window.ref = ref;
+  window.GAME_REF = GAME_REF;
+
+  window.dispatchEvent(new Event('firebase-ready'));
+</script>
 <style>
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-:root {
-  --teal: #0F6E56; --teal-light: #E1F5EE; --teal-dark: #085041; --teal-mid: #1D9E75;
-  --amber: #BA7517; --amber-light: #FAEEDA;
-  --text: #1a1a1a; --muted: #6b6b6b; --border: rgba(0,0,0,0.1);
-  --bg: #ffffff; --surface: #f8f8f6;
-  --mono: 'JetBrains Mono', monospace;
-}
-html, body { min-height: 100vh; background: var(--bg); color: var(--text); font-family: 'Inter', system-ui, sans-serif; }
-.screen { display: none; min-height: 100vh; flex-direction: column; }
-.screen.active { display: flex; }
-.wrap { padding: 1.5rem; max-width: 720px; margin: 0 auto; width: 100%; }
-.wrap-narrow { padding: 1.5rem; max-width: 440px; margin: 0 auto; width: 100%; }
-.logo { font-family: var(--mono); font-size: 11px; color: var(--teal); letter-spacing: .1em; text-transform: uppercase; margin-bottom: 1rem; }
-h1 { font-size: 24px; font-weight: 500; margin-bottom: .5rem; }
-.sub { font-size: 14px; color: var(--muted); margin-bottom: 1.5rem; line-height: 1.6; }
-.label { font-family: var(--mono); font-size: 11px; color: var(--muted); letter-spacing: .1em; text-transform: uppercase; margin-bottom: .75rem; }
-.btn { padding: 12px 20px; border-radius: 12px; font-size: 14px; cursor: pointer; border: none; transition: all .15s; font-family: inherit; }
-.btn-primary { background: var(--teal); color: white; }
-.btn-primary:hover { background: var(--teal-dark); }
-.btn-primary:disabled { opacity: .4; cursor: default; }
-.btn-ghost { background: transparent; border: 0.5px solid var(--border); color: var(--muted); }
-.input { width: 100%; padding: 13px 16px; border: 1.5px solid var(--border); border-radius: 12px; font-size: 15px; background: var(--bg); color: var(--text); outline: none; font-family: inherit; }
-.input:focus { border-color: var(--teal); }
-.textarea { width: 100%; padding: 12px 16px; border: 1.5px solid var(--border); border-radius: 12px; font-size: 14px; background: var(--bg); color: var(--text); outline: none; font-family: inherit; resize: none; min-height: 80px; }
-.textarea:focus { border-color: var(--teal); }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', sans-serif;
+    background: #0f0c29;
+    background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+    min-height: 100vh;
+    color: white;
+  }
 
-/* QR BOX */
-.qr-box { background: var(--surface); border: 0.5px solid var(--border); border-radius: 16px; padding: 1.5rem; display: flex; gap: 1.5rem; align-items: center; margin-bottom: 1.5rem; }
-.qr-wrap { background: white; padding: 10px; border-radius: 12px; border: 0.5px solid var(--border); flex-shrink: 0; }
-.qr-info h2 { font-size: 15px; font-weight: 500; margin-bottom: 6px; }
-.qr-info p { font-size: 13px; color: var(--muted); line-height: 1.6; }
-.qr-url { font-family: var(--mono); font-size: 11px; color: var(--teal); margin-top: 8px; word-break: break-all; }
+  /* HOST STYLES */
+  #host-app { display: none; padding: 20px; max-width: 1200px; margin: 0 auto; }
+  .host-header { text-align: center; margin-bottom: 30px; }
+  .host-header h1 { font-size: 2.5em; background: linear-gradient(90deg, #f093fb, #f5576c, #fda085); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .host-header p { color: #aaa; margin-top: 8px; }
 
-/* PLAYERS GRID */
-.players-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; margin-bottom: 1.5rem; min-height: 56px; }
-.player-chip { background: var(--teal-light); border-radius: 10px; padding: 8px 12px; display: flex; align-items: center; gap: 8px; }
-.avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--teal); color: white; font-size: 11px; font-weight: 500; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-.avatar-lg { width: 60px; height: 60px; font-size: 20px; }
+  .host-grid { display: grid; grid-template-columns: 300px 1fr; gap: 20px; }
 
-/* PROGRESS */
-.progress-wrap { height: 6px; background: var(--surface); border-radius: 99px; margin-bottom: 1.5rem; overflow: hidden; }
-.progress-fill { height: 100%; background: var(--teal); border-radius: 99px; transition: width .4s; }
-.dots { display: flex; gap: 4px; margin-bottom: 1.5rem; }
-.dot { flex: 1; height: 4px; border-radius: 99px; background: var(--border); }
-.dot.done { background: var(--teal); }
-.dot.active { background: var(--teal-mid); }
+  .qr-panel {
+    background: rgba(255,255,255,0.07);
+    border-radius: 16px;
+    padding: 20px;
+    text-align: center;
+  }
+  .qr-panel h3 { margin-bottom: 15px; font-size: 1em; color: #ccc; }
+  #qrcode { display: flex; justify-content: center; margin: 10px 0; }
+  #qrcode canvas, #qrcode img { border-radius: 8px; }
 
-/* HOST QUESTION */
-.q-number { font-family: var(--mono); font-size: 11px; color: var(--muted); margin-bottom: 8px; }
-.q-text-host { font-size: 22px; font-weight: 500; line-height: 1.35; margin-bottom: 8px; }
-.q-text-player { font-size: 18px; font-weight: 500; line-height: 1.4; margin-bottom: 8px; }
-.q-tag { font-family: var(--mono); font-size: 11px; color: var(--teal); background: var(--teal-light); padding: 3px 10px; border-radius: 99px; display: inline-block; margin-bottom: 1.25rem; }
-.votes-status { font-family: var(--mono); font-size: 12px; color: var(--muted); margin-bottom: 1rem; }
+  .players-panel {
+    background: rgba(255,255,255,0.07);
+    border-radius: 16px;
+    padding: 20px;
+    margin-top: 15px;
+  }
+  .players-panel h3 { margin-bottom: 12px; color: #f093fb; }
+  #player-list { display: flex; flex-wrap: wrap; gap: 8px; }
+  .player-chip {
+    background: rgba(240,147,251,0.2);
+    border: 1px solid rgba(240,147,251,0.4);
+    border-radius: 20px;
+    padding: 5px 14px;
+    font-size: 0.85em;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .player-chip .dot { width: 8px; height: 8px; border-radius: 50%; background: #4ade80; }
+  .player-chip .dot.waiting { background: #facc15; }
 
-/* HOST OPTIONS */
-.host-opts { display: flex; flex-direction: column; gap: 8px; margin-bottom: 1.5rem; }
-.host-opt { background: var(--surface); border: 0.5px solid var(--border); border-radius: 12px; padding: 12px 16px; }
-.host-opt.leading { border-color: var(--teal); background: var(--teal-light); }
-.opt-top { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
-.opt-letter { font-family: var(--mono); font-size: 12px; color: var(--teal); width: 18px; flex-shrink: 0; }
-.opt-text { flex: 1; font-size: 14px; font-weight: 500; }
-.opt-count { font-family: var(--mono); font-size: 12px; color: var(--teal); }
-.opt-bar-wrap { height: 5px; background: var(--border); border-radius: 99px; overflow: hidden; margin-bottom: 8px; }
-.opt-bar { height: 100%; background: var(--teal); border-radius: 99px; transition: width .4s; }
-.comments-list { display: flex; flex-direction: column; gap: 4px; }
-.comment-item { font-size: 12px; color: var(--muted); padding: 4px 8px; background: rgba(255,255,255,0.6); border-radius: 6px; }
-.comment-name { font-weight: 500; color: var(--text); }
+  .control-panel { display: flex; flex-direction: column; gap: 15px; }
 
-/* PLAYER OPTIONS */
-.player-opts { display: flex; flex-direction: column; gap: 10px; margin-bottom: 1rem; }
-.player-opt-btn { padding: 14px 16px; border: 1.5px solid var(--border); border-radius: 12px; font-size: 15px; background: var(--bg); color: var(--text); cursor: pointer; text-align: left; transition: all .15s; font-family: inherit; }
-.player-opt-btn:hover { border-color: var(--teal); }
-.player-opt-btn.chosen { background: var(--teal-light); border-color: var(--teal); color: var(--teal-dark); font-weight: 500; }
-.comment-section { margin-bottom: 1.5rem; }
-.comment-label { font-size: 13px; color: var(--muted); margin-bottom: 6px; }
-.voted-box { text-align: center; padding: 2rem 1rem; color: var(--muted); font-family: var(--mono); font-size: 13px; background: var(--surface); border-radius: 16px; }
+  .question-card {
+    background: rgba(255,255,255,0.07);
+    border-radius: 16px;
+    padding: 20px;
+  }
+  .question-card h3 { color: #f093fb; margin-bottom: 8px; font-size: 0.9em; text-transform: uppercase; letter-spacing: 1px; }
+  .question-text { font-size: 1.2em; margin-bottom: 15px; line-height: 1.4; }
 
-/* HOST NAV */
-.host-nav { display: flex; gap: 10px; }
-.host-nav .btn-ghost { flex: 1; }
-.host-nav .btn-primary { flex: 2; }
+  .results-bars { display: flex; flex-direction: column; gap: 10px; }
+  .result-bar-wrap { display: flex; align-items: center; gap: 10px; }
+  .result-label { font-size: 0.85em; width: 200px; flex-shrink: 0; }
+  .result-bar-bg { flex: 1; background: rgba(255,255,255,0.1); border-radius: 20px; height: 28px; overflow: hidden; }
+  .result-bar { height: 100%; border-radius: 20px; transition: width 0.5s ease; display: flex; align-items: center; padding-left: 10px; font-size: 0.8em; font-weight: bold; min-width: 30px; }
+  .result-bar.a { background: linear-gradient(90deg, #f093fb, #f5576c); }
+  .result-bar.b { background: linear-gradient(90deg, #4facfe, #00f2fe); }
+  .result-bar.c { background: linear-gradient(90deg, #43e97b, #38f9d7); }
+  .result-count { font-size: 0.85em; color: #aaa; width: 60px; text-align: right; }
 
-/* RESULTS */
-.winner-card { background: var(--teal-light); border: 0.5px solid var(--teal); border-radius: 16px; padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 1rem; }
-.winner-badge { font-size: 32px; }
-.winner-name { font-size: 20px; font-weight: 500; color: var(--teal-dark); }
-.winner-score { font-family: var(--mono); font-size: 13px; color: var(--teal); margin-top: 2px; }
-.scoreboard { display: flex; flex-direction: column; gap: 6px; margin-bottom: 1.5rem; }
-.score-row { display: flex; align-items: center; gap: 12px; padding: 10px 14px; background: var(--surface); border-radius: 10px; }
-.score-row.me { background: var(--teal-light); }
-.score-rank { font-family: var(--mono); font-size: 13px; color: var(--muted); width: 22px; text-align: center; }
-.score-name { flex: 1; font-size: 14px; font-weight: 500; }
-.score-pts { font-family: var(--mono); font-size: 13px; color: var(--teal); }
-.q-summary { display: flex; flex-direction: column; gap: 10px; }
-.qs-card { background: var(--surface); border-radius: 12px; padding: 14px; }
-.qs-q { font-size: 13px; font-weight: 500; margin-bottom: 6px; }
-.qs-winner { font-size: 12px; color: var(--teal); font-family: var(--mono); margin-bottom: 6px; }
-.qs-comments { font-size: 12px; color: var(--muted); }
+  .comments-box { margin-top: 15px; }
+  .comments-box h4 { color: #aaa; font-size: 0.85em; margin-bottom: 8px; }
+  .comment-item { background: rgba(255,255,255,0.05); border-radius: 8px; padding: 8px 12px; margin-bottom: 6px; font-size: 0.85em; }
+  .comment-item strong { color: #f093fb; }
 
-/* WAIT */
-.wait-center { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60vh; gap: 1rem; text-align: center; }
-.pulse { width: 10px; height: 10px; border-radius: 50%; background: var(--teal); animation: pulse 1.4s infinite; }
-@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(.8)} }
-.error-box { background: #fff0f0; border: 0.5px solid #ffcccc; border-radius: 10px; padding: 12px 16px; font-size: 13px; color: #c00; margin-bottom: 1rem; display: none; }
+  .vote-progress { text-align: center; color: #aaa; font-size: 0.9em; margin-top: 10px; }
+
+  .btn-row { display: flex; gap: 10px; justify-content: center; margin-top: 20px; }
+  .btn {
+    padding: 12px 28px;
+    border: none;
+    border-radius: 30px;
+    font-size: 1em;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.3); }
+  .btn-primary { background: linear-gradient(90deg, #f093fb, #f5576c); color: white; }
+  .btn-secondary { background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); }
+  .btn-success { background: linear-gradient(90deg, #43e97b, #38f9d7); color: #1a1a1a; }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+  /* SCOREBOARD */
+  .scoreboard {
+    background: rgba(255,255,255,0.07);
+    border-radius: 16px;
+    padding: 20px;
+  }
+  .scoreboard h3 { color: #fda085; margin-bottom: 15px; }
+  .score-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px;
+    border-radius: 10px;
+    margin-bottom: 8px;
+    background: rgba(255,255,255,0.05);
+  }
+  .score-item.first { background: rgba(253,224,71,0.15); border: 1px solid rgba(253,224,71,0.4); }
+  .score-item.second { background: rgba(209,213,219,0.1); }
+  .score-item.third { background: rgba(180,100,50,0.1); }
+  .score-rank { font-size: 1.4em; width: 35px; }
+  .score-name { flex: 1; font-weight: bold; }
+  .score-pts { color: #f093fb; font-weight: bold; }
+
+  /* LOBBY HOST */
+  .lobby-screen { text-align: center; padding: 40px 20px; }
+  .lobby-screen h2 { font-size: 2em; margin-bottom: 10px; }
+  .lobby-screen p { color: #aaa; margin-bottom: 30px; }
+  .start-btn-big {
+    padding: 18px 50px;
+    background: linear-gradient(90deg, #f093fb, #f5576c);
+    border: none; border-radius: 40px;
+    font-size: 1.3em; font-weight: bold; color: white;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .start-btn-big:hover { transform: scale(1.05); box-shadow: 0 10px 30px rgba(240,93,251,0.4); }
+  .player-count { font-size: 3em; font-weight: bold; color: #f093fb; margin: 20px 0; }
+
+  /* PLAYER STYLES */
+  #player-app { display: none; padding: 20px; max-width: 480px; margin: 0 auto; }
+  .player-header { text-align: center; margin-bottom: 30px; }
+  .player-header h1 { font-size: 1.8em; background: linear-gradient(90deg, #f093fb, #f5576c); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+  .input-card {
+    background: rgba(255,255,255,0.07);
+    border-radius: 16px;
+    padding: 25px;
+    margin-bottom: 20px;
+  }
+  .input-card label { display: block; color: #ccc; margin-bottom: 8px; font-size: 0.9em; }
+  .input-card input, .input-card select {
+    width: 100%; padding: 12px 16px;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 10px; color: white;
+    font-size: 1em; outline: none;
+  }
+  .input-card input::placeholder { color: #666; }
+
+  .waiting-screen { text-align: center; padding: 40px 20px; }
+  .waiting-screen .pulse { font-size: 4em; animation: pulse 1.5s infinite; }
+  @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.1)} }
+  .waiting-screen h2 { margin: 20px 0 10px; font-size: 1.5em; }
+  .waiting-screen p { color: #aaa; }
+
+  .question-player {
+    background: rgba(255,255,255,0.07);
+    border-radius: 16px;
+    padding: 25px;
+  }
+  .q-number { color: #f093fb; font-size: 0.85em; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+  .q-text { font-size: 1.15em; line-height: 1.5; margin-bottom: 20px; }
+  .option-btn {
+    width: 100%; padding: 14px 18px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 12px; color: white;
+    font-size: 0.95em; cursor: pointer;
+    margin-bottom: 10px; text-align: left;
+    transition: all 0.2s;
+  }
+  .option-btn:hover:not(.selected):not(:disabled) { background: rgba(240,147,251,0.2); border-color: #f093fb; }
+  .option-btn.selected { background: rgba(240,147,251,0.3); border-color: #f093fb; font-weight: bold; }
+  .option-btn:disabled { opacity: 0.6; cursor: default; }
+
+  .comment-area { margin-top: 15px; }
+  .comment-area textarea {
+    width: 100%; padding: 12px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 10px; color: white;
+    font-size: 0.9em; resize: none; outline: none;
+    font-family: inherit;
+  }
+  .comment-area textarea::placeholder { color: #666; }
+
+  .submit-btn {
+    width: 100%; padding: 14px;
+    background: linear-gradient(90deg, #f093fb, #f5576c);
+    border: none; border-radius: 12px;
+    color: white; font-size: 1em; font-weight: bold;
+    cursor: pointer; margin-top: 12px;
+    transition: all 0.2s;
+  }
+  .submit-btn:hover { opacity: 0.9; }
+  .submit-btn:disabled { opacity: 0.4; cursor: default; }
+
+  .voted-screen { text-align: center; padding: 30px; }
+  .voted-screen h2 { font-size: 1.5em; margin: 15px 0 8px; }
+  .voted-screen p { color: #aaa; }
+
+  .final-score-player {
+    background: rgba(255,255,255,0.07);
+    border-radius: 16px;
+    padding: 30px;
+    text-align: center;
+  }
+  .final-score-player h2 { font-size: 2em; margin-bottom: 20px; }
+  .my-score { font-size: 1.2em; margin: 15px 0; }
+  .my-score span { font-size: 2em; color: #f093fb; font-weight: bold; }
+
+  /* RESET BTN */
+  .reset-btn {
+    position: fixed; top: 15px; right: 15px;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: white; padding: 8px 16px;
+    border-radius: 20px; cursor: pointer; font-size: 0.8em;
+  }
+  .reset-btn:hover { background: rgba(255,80,80,0.3); }
+
+  .status-badge {
+    display: inline-block;
+    background: rgba(74,222,128,0.2);
+    border: 1px solid rgba(74,222,128,0.4);
+    color: #4ade80;
+    padding: 4px 12px; border-radius: 20px;
+    font-size: 0.8em; margin-top: 8px;
+  }
 </style>
 </head>
 <body>
 
-<!-- HOST: LOBBY -->
-<div class="screen active" id="s-host-lobby">
-<div class="wrap">
-  <div class="logo">// vivicta AI seanse · juni 2026</div>
-  <h1>Spå AI-fremtiden</h1>
-  <div class="sub">Vis QR-koden på storskjermen. Alle scanner og registrerer seg — du ser dem dukke opp i sanntid.</div>
-  <div class="qr-box">
-    <div class="qr-wrap"><div id="qr-code"></div></div>
-    <div class="qr-info">
-      <h2>Scan for å delta</h2>
-      <div class="qr-url" id="qr-url-text" style="display:none"></div>
+<!-- HOST APP -->
+<div id="host-app">
+  <button class="reset-btn" onclick="resetGame()">🔄 Nytt spill</button>
+
+  <div class="host-header">
+    <h1>🔮 Spå AI-fremtiden</h1>
+    <p>Vertskontroll — du styrer spillet</p>
+  </div>
+
+  <!-- LOBBY -->
+  <div id="host-lobby">
+    <div class="host-grid">
+      <div>
+        <div class="qr-panel">
+          <h3>Spillere scanner her</h3>
+          <div id="qrcode"></div>
+          <p style="font-size:0.75em;color:#888;margin-top:8px;">Scan for å delta</p>
+        </div>
+        <div class="players-panel">
+          <h3>👥 Deltakere (<span id="player-count">0</span>)</h3>
+          <div id="player-list"></div>
+        </div>
+      </div>
+      <div class="lobby-screen">
+        <h2>Klar til å starte?</h2>
+        <p>La alle scanne QR-koden og registrere seg</p>
+        <div class="player-count" id="lobby-count">0</div>
+        <p style="color:#aaa">deltakere inne</p>
+        <br>
+        <button class="start-btn-big" onclick="startGame()" id="start-btn">🚀 Start leken!</button>
+      </div>
     </div>
   </div>
-  <div class="label">// deltakere (<span id="lobby-count">0</span>)</div>
-  <div class="players-grid" id="lobby-players"><div style="color:var(--muted);font-size:13px;font-family:var(--mono)">Venter på deltakere...</div></div>
-  <button class="btn btn-primary" id="start-btn" style="width:100%" onclick="hostStart()" disabled>Start leken →</button>
-</div>
-</div>
 
-<!-- HOST: QUESTION -->
-<div class="screen" id="s-host-q">
-<div class="wrap">
-  <div class="progress-wrap"><div class="progress-fill" id="host-prog"></div></div>
-  <div class="q-number" id="host-q-num"></div>
-  <div class="q-text-host" id="host-q-text"></div>
-  <div class="q-tag" id="host-q-tag"></div>
-  <div class="votes-status" id="host-votes-status"></div>
-  <div class="host-opts" id="host-opts"></div>
-  <div class="host-nav">
-    <button class="btn btn-ghost" onclick="hostPrev()">← Forrige</button>
-    <button class="btn btn-primary" id="host-next-btn" onclick="hostNext()">Neste →</button>
-  </div>
-</div>
-</div>
-
-<!-- HOST: RESULTS -->
-<div class="screen" id="s-host-results">
-<div class="wrap">
-  <div class="logo">// resultater</div>
-  <h1>Fasit — slik spådde dere fremtiden</h1>
-  <div class="sub" id="host-res-sub"></div>
-  <div class="winner-card" id="host-winner"></div>
-  <div class="label">// poengtavle — flest ganger med flertallet</div>
-  <div class="scoreboard" id="host-scoreboard"></div>
-  <div class="label">// spørsmål og svar</div>
-  <div class="q-summary" id="host-q-summary"></div>
-</div>
-</div>
-
-<!-- PLAYER: JOIN -->
-<div class="screen" id="s-player-join">
-<div class="wrap-narrow" style="padding-top:3rem">
-  <div class="logo">// vivicta AI seanse · juni 2026</div>
-  <h1>Spå AI-fremtiden</h1>
-  <div class="sub">Skriv inn navnet ditt for å delta i leken.</div>
-  <div class="error-box" id="join-error"></div>
-  <input class="input" id="player-name" type="text" placeholder="Ditt navn..." maxlength="24" style="margin-bottom:1rem" />
-  <button class="btn btn-primary" style="width:100%" onclick="playerJoin()">Bli med →</button>
-</div>
-</div>
-
-<!-- PLAYER: WAIT -->
-<div class="screen" id="s-player-wait">
-<div class="wrap-narrow">
-  <div class="wait-center">
-    <div class="avatar avatar-lg" id="wait-av"></div>
-    <div style="font-size:18px;font-weight:500" id="wait-name"></div>
-    <div class="pulse"></div>
-    <div style="font-size:13px;color:var(--muted)">Venter på at verten starter...</div>
-  </div>
-</div>
-</div>
-
-<!-- PLAYER: VOTE -->
-<div class="screen" id="s-player-vote">
-<div class="wrap-narrow">
-  <div class="dots" id="player-dots"></div>
-  <div class="q-number" id="player-q-num"></div>
-  <div class="q-text-player" id="player-q-text"></div>
-  <div class="q-tag" id="player-q-tag"></div>
-  <div class="player-opts" id="player-opts"></div>
-  <div class="comment-section" id="comment-section" style="display:none">
-    <div class="comment-label">Legg til en kommentar (valgfritt)</div>
-    <textarea class="textarea" id="player-comment" placeholder="Hva tenker du på dette...?" maxlength="120"></textarea>
-    <button class="btn btn-primary" style="width:100%" onclick="playerSubmit()">Send svar →</button>
-  </div>
-  <div class="voted-box" id="voted-box" style="display:none">✓ Stemt! Venter på neste spørsmål...</div>
-</div>
-</div>
-
-<!-- PLAYER: RESULTS -->
-<div class="screen" id="s-player-results">
-<div class="wrap-narrow">
-  <div class="logo">// ferdig!</div>
-  <h1>Resultater</h1>
-  <div class="sub" id="player-res-sub"></div>
-  <div class="winner-card" id="player-winner"></div>
-  <div class="label" style="margin-top:1.5rem">// poengtavle</div>
-  <div class="scoreboard" id="player-scoreboard"></div>
-</div>
-</div>
-
-<script>
-const STORAGE_KEY = 'vivicta_ai_game_v3';
-const POLL_MS = 1500;
-
-const Qs = [
-  { text: "Kan AI skrive en komplett D365 FO-implementering uten menneskelig hjelp?", tag: "erp · implementering", opts: ["Ja, fullt ut", "Delvis — med veiledning", "Nei, ikke ennå"] },
-  { text: "Vil AI erstatte rollen som senior ERP-konsulent?", tag: "kompetanse · roller", opts: ["Ja, fullstendig", "Delvis — nye roller vokser frem", "Nei — aldri"] },
-  { text: "Kan AI gjennomføre periodestenging i D365 autonomt?", tag: "agentic ERP · automatisering", opts: ["Ja, rutinemessig", "I enkle tilfeller", "Nei — for komplekst"] },
-  { text: "Vil kundene forvente AI-drevet ERP som standard om 2 år?", tag: "marked · forventninger", opts: ["Ja, absolutt", "Hos early adopters", "Nei — for tidlig"] },
-  { text: "Kan AI ta beslutninger i en M&A-integrasjon av to ERP-systemer?", tag: "kompleksitet · risiko", opts: ["Ja, med tilsyn", "Bare anbefalinger", "Nei — for sensitiv"] },
-  { text: "Vil Copilot Studio erstatte tradisjonell Power Platform-utvikling?", tag: "copilot · power platform", opts: ["Ja, i stor grad", "Supplement — ikke erstatter", "Nei — for begrenset"] },
-  { text: "Kan AI skrive en fullstendig kravspesifikasjon fra et møtereferat?", tag: "dokumentasjon · analyse", opts: ["Ja, produksjonsklar", "Utkast som må justeres", "Nei — mangler kontekst"] },
-  { text: "Vil norske selskaper ha Chief AI Officer som standard om 2 år?", tag: "organisasjon · ledelse", opts: ["Ja, i de fleste", "Bare i tech-selskaper", "Nei — for tidlig"] },
-  { text: "Kan AI oppdage regnskapssvindel i sanntid via ERP?", tag: "finans · compliance", opts: ["Ja, pålitelig nok", "Delvis — som flagg", "Nei — for mange falske alarmer"] },
-  { text: "Er AI-satsingen til Microsoft Dynamics en fordel eller trussel for oss som konsulenter?", tag: "strategi · fremtid", opts: ["Stor fordel", "Begge deler", "Potensiell trussel"] }
-];
-
-// --- STORAGE ---
-async function load() {
-  try { const r = await window.storage.get(STORAGE_KEY, true); return r ? JSON.parse(r.value) : null; }
-  catch(e) { const s = localStorage.getItem(STORAGE_KEY); return s ? JSON.parse(s) : null; }
-}
-async function save(state) {
-  const v = JSON.stringify(state);
-  try { await window.storage.set(STORAGE_KEY, v, true); } catch(e) {}
-  localStorage.setItem(STORAGE_KEY, v);
-}
-function defaultState() {
-  return { phase:'lobby', players:{}, votes:{}, playerVotes:{}, comments:{}, currentQ:0, gameEnded:false };
-}
-
-// --- HELPERS ---
-function initials(n) { return n.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2); }
-function show(id) { document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active')); document.getElementById(id).classList.add('active'); }
-function el(id) { return document.getElementById(id); }
-function myId() { return localStorage.getItem('my_pid'); }
-function myName() { return localStorage.getItem('my_pname'); }
-
-let selectedOpt = null;
-
-// --- HOST ---
-async function hostInit() {
-  let state = await load();
-  if (!state) { state = defaultState(); await save(state); }
-
-  const base = window.location.href.split('?')[0];
-  const joinUrl = base + '?join=1';
-  el('qr-url-text').textContent = joinUrl;
-  const qrImg = document.createElement('img');
-  qrImg.src = 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&color=0F6E56&data=' + encodeURIComponent(joinUrl);
-  qrImg.style.cssText = 'width:150px;height:150px;display:block;border-radius:4px';
-  el('qr-code').appendChild(qrImg);
-
-  if (state.gameEnded) { show('s-host-results'); renderHostResults(state); return; }
-  if (state.phase === 'playing') { show('s-host-q'); renderHostQ(state); }
-  hostPoll();
-}
-
-let hostPolling = true;
-async function hostPoll() {
-  if (!hostPolling) return;
-  const state = await load();
-  if (state) {
-    if (state.gameEnded) { show('s-host-results'); renderHostResults(state); return; }
-    if (state.phase === 'lobby') { show('s-host-lobby'); renderLobby(state); }
-    if (state.phase === 'playing') { show('s-host-q'); renderHostQ(state); }
-  }
-  setTimeout(hostPoll, POLL_MS);
-}
-
-function renderLobby(state) {
-  const players = Object.values(state.players);
-  el('lobby-count').textContent = players.length;
-  el('lobby-players').innerHTML = players.length === 0
-    ? '<div style="color:var(--muted);font-size:13px;font-family:var(--mono)">Venter på deltakere...</div>'
-    : players.map(p=>`<div class="player-chip"><div class="avatar">${initials(p.name)}</div><span style="font-size:13px;font-weight:500;color:var(--teal-dark)">${p.name}</span></div>`).join('');
-  el('start-btn').disabled = players.length < 1;
-}
-
-async function hostStart() {
-  const state = await load();
-  state.phase = 'playing'; state.currentQ = 0;
-  await save(state);
-  show('s-host-q'); renderHostQ(state);
-}
-
-function renderHostQ(state) {
-  const qi = state.currentQ; const q = Qs[qi]; const total = Qs.length;
-  el('host-prog').style.width = ((qi+1)/total*100)+'%';
-  el('host-q-num').textContent = `// spørsmål ${qi+1} av ${total}`;
-  el('host-q-text').textContent = q.text;
-  el('host-q-tag').textContent = q.tag;
-
-  const qv = state.votes[qi]||{};
-  const totalVotes = Object.values(qv).reduce((a,b)=>a+b,0);
-  const totalPlayers = Object.keys(state.players).length;
-  el('host-votes-status').textContent = `${totalVotes} av ${totalPlayers} har stemt`;
-
-  const maxV = Math.max(...q.opts.map((_,i)=>qv[i]||0), 1);
-  const allComments = state.comments[qi]||{};
-
-  el('host-opts').innerHTML = q.opts.map((o,i)=>{
-    const v = qv[i]||0;
-    const pct = totalVotes>0 ? Math.round(v/totalVotes*100) : 0;
-    const lead = v===maxV && v>0;
-    const optComments = Object.entries(allComments)
-      .filter(([pid,c])=>c.opt===i && c.text)
-      .map(([pid,c])=>`<div class="comment-item"><span class="comment-name">${state.players[pid]?state.players[pid].name:'?'}:</span> ${escHtml(c.text)}</div>`)
-      .join('');
-    return `<div class="host-opt ${lead?'leading':''}">
-      <div class="opt-top">
-        <div class="opt-letter">${String.fromCharCode(65+i)}</div>
-        <div class="opt-text">${o}</div>
-        <div class="opt-count">${v} ${v===1?'stemme':'stemmer'} · ${pct}%</div>
+  <!-- QUESTION HOST -->
+  <div id="host-question" style="display:none">
+    <div class="host-grid">
+      <div>
+        <div class="qr-panel">
+          <div id="qrcode2"></div>
+          <p style="font-size:0.75em;color:#888;margin-top:8px;">Scan for å delta</p>
+        </div>
+        <div class="players-panel">
+          <h3>👥 Deltakere</h3>
+          <div id="player-list2"></div>
+        </div>
       </div>
-      <div class="opt-bar-wrap"><div class="opt-bar" style="width:${pct}%"></div></div>
-      ${optComments ? `<div class="comments-list" style="margin-top:8px">${optComments}</div>` : ''}
-    </div>`;
-  }).join('');
+      <div class="control-panel">
+        <div class="question-card">
+          <h3>Spørsmål <span id="q-num">1</span> av 10</h3>
+          <div class="question-text" id="host-q-text"></div>
+          <div class="results-bars" id="host-results"></div>
+          <div class="vote-progress" id="vote-progress"></div>
+          <div class="comments-box">
+            <h4>💬 Kommentarer</h4>
+            <div id="host-comments"></div>
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-secondary" onclick="prevQuestion()" id="prev-btn">← Forrige</button>
+          <button class="btn btn-primary" onclick="nextQuestion()" id="next-btn">Neste →</button>
+          <button class="btn btn-success" onclick="showFinal()" id="final-btn" style="display:none">🏆 Vis vinner!</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
-  el('host-next-btn').textContent = qi===total-1 ? 'Se resultater →' : 'Neste →';
-}
+  <!-- FINAL HOST -->
+  <div id="host-final" style="display:none">
+    <div style="text-align:center;margin-bottom:30px">
+      <h2 style="font-size:2.5em;background:linear-gradient(90deg,#fda085,#f6d365);-webkit-background-clip:text;-webkit-text-fill-color:transparent">🏆 Resultater!</h2>
+      <p style="color:#aaa">Hvem stemte mest med flertallet?</p>
+    </div>
+    <div class="scoreboard" id="final-scoreboard"></div>
+  </div>
+</div>
 
-function escHtml(t) { return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+<!-- PLAYER APP -->
+<div id="player-app">
+  <div class="player-header">
+    <h1>🔮 Spå AI-fremtiden</h1>
+  </div>
 
-async function hostPrev() {
-  const state = await load();
-  if (state.currentQ>0) { state.currentQ--; await save(state); renderHostQ(state); }
-}
-async function hostNext() {
-  const state = await load();
-  if (state.currentQ<Qs.length-1) { state.currentQ++; await save(state); renderHostQ(state); }
-  else { calcScores(state); state.gameEnded=true; await save(state); show('s-host-results'); renderHostResults(state); }
-}
+  <!-- Register -->
+  <div id="player-register">
+    <div class="input-card">
+      <label>Ditt navn</label>
+      <input type="text" id="player-name" placeholder="Skriv inn navnet ditt..." />
+      <br><br>
+      <label>Din rolle</label>
+      <select id="player-role">
+        <option value="">Velg rolle...</option>
+        <option>ERP-konsulent</option>
+        <option>Prosjektleder</option>
+        <option>Utvikler</option>
+        <option>Salg / Marked</option>
+        <option>Leder</option>
+        <option>Support / Drift</option>
+        <option>Annet</option>
+      </select>
+      <br><br>
+      <button class="submit-btn" onclick="registerPlayer()">✅ Bli med i leken!</button>
+    </div>
+  </div>
 
-function calcScores(state) {
-  Object.keys(state.players).forEach(pid=>{ state.players[pid].score=0; });
-  Qs.forEach((_,qi)=>{
-    const qv = state.votes[qi]||{};
-    const maxV = Math.max(...Object.values(qv),0);
-    if (!maxV) return;
-    const winIdx = Object.keys(qv).find(k=>qv[k]===maxV);
-    Object.keys(state.players).forEach(pid=>{
-      const pv = (state.playerVotes[pid]||{});
-      if (String(pv[qi])===String(winIdx)) state.players[pid].score=(state.players[pid].score||0)+1;
+  <!-- Waiting -->
+  <div id="player-waiting" style="display:none">
+    <div class="waiting-screen">
+      <div class="pulse">⏳</div>
+      <h2>Du er med!</h2>
+      <p>Venter på at verten starter spillet...</p>
+      <br>
+      <div class="status-badge" id="registered-name"></div>
+    </div>
+  </div>
+
+  <!-- Question -->
+  <div id="player-question" style="display:none">
+    <div class="question-player">
+      <div class="q-number" id="p-q-num">Spørsmål 1 av 10</div>
+      <div class="q-text" id="p-q-text"></div>
+      <div id="p-options"></div>
+      <div class="comment-area" id="p-comment-area" style="display:none">
+        <textarea id="p-comment" placeholder="Legg til en kommentar (valgfritt)..." rows="2"></textarea>
+        <button class="submit-btn" id="p-submit-btn" onclick="submitAnswer()">📤 Send svar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Voted -->
+  <div id="player-voted" style="display:none">
+    <div class="voted-screen">
+      <div style="font-size:3em">✅</div>
+      <h2>Svaret er registrert!</h2>
+      <p>Venter på neste spørsmål...</p>
+    </div>
+  </div>
+
+  <!-- Final Player -->
+  <div id="player-final" style="display:none">
+    <div class="final-score-player">
+      <h2>🏆 Spillet er ferdig!</h2>
+      <div class="my-score">Du stemte med flertallet <span id="my-score-num">0</span> ganger</div>
+      <p style="color:#aaa;margin-bottom:20px">av 10 spørsmål</p>
+      <div id="player-scoreboard"></div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  // Wait for firebase
+  window.addEventListener('firebase-ready', init);
+
+  let myPlayerId = null;
+  let myName = '';
+  let selectedOption = null;
+  let currentQ = 0;
+  let gameState = null;
+  let listenersAttached = false;
+
+  function init() {
+    const { isPlayer, dbRef, onValue, QUESTIONS } = window;
+
+    if (isPlayer) {
+      document.getElementById('player-app').style.display = 'block';
+      startPlayerListening();
+    } else {
+      document.getElementById('host-app').style.display = 'block';
+      setupQR();
+      startHostListening();
+    }
+  }
+
+  function setupQR() {
+    const url = window.location.href.split('?')[0] + '?join=1';
+    ['qrcode','qrcode2'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.innerHTML = '';
+        new QRCode(el, { text: url, width: 200, height: 200, colorLight: '#ffffff', colorDark: '#0f0c29' });
+      }
     });
-  });
-}
-
-function renderHostResults(state) {
-  const players = Object.values(state.players).sort((a,b)=>b.score-a.score);
-  const w = players[0];
-  el('host-res-sub').textContent = `${players.length} deltakere · ${Qs.length} spørsmål · vinner: den som stemte oftest med flertallet`;
-  el('host-winner').innerHTML = `<div class="winner-badge">🏆</div><div><div class="winner-name">${w?w.name:'—'}</div><div class="winner-score">Stemte med flertallet ${w?w.score:0} av ${Qs.length} ganger</div></div>`;
-  el('host-scoreboard').innerHTML = players.map((p,i)=>`
-    <div class="score-row"><div class="score-rank">${['🥇','🥈','🥉'][i]||i+1}</div><div class="avatar">${initials(p.name)}</div><div class="score-name">${p.name}</div><div class="score-pts">${p.score}/${Qs.length}</div></div>`).join('');
-  el('host-q-summary').innerHTML = Qs.map((q,qi)=>{
-    const qv=state.votes[qi]||{}; const tot=Object.values(qv).reduce((a,b)=>a+b,0)||1;
-    let maxI=0,maxV=0; q.opts.forEach((_,i)=>{ if((qv[i]||0)>maxV){maxV=qv[i]||0;maxI=i;} });
-    const allC = state.comments[qi]||{};
-    const commentsList = Object.entries(allC).filter(([,c])=>c.text).map(([pid,c])=>`${state.players[pid]?state.players[pid].name:'?'}: "${escHtml(c.text)}"`).join(' · ');
-    return `<div class="qs-card">
-      <div class="qs-q">${q.text}</div>
-      <div class="qs-winner">Flertall: ${q.opts[maxI]} (${Math.round(maxV/tot*100)}%)</div>
-      ${commentsList?`<div class="qs-comments">${commentsList}</div>`:''}
-    </div>`;
-  }).join('');
-}
-
-// --- PLAYER ---
-async function playerInit() {
-  const id = myId();
-  if (id) {
-    el('wait-av').textContent = initials(myName()||'?');
-    el('wait-name').textContent = myName()||'';
-    show('s-player-wait');
-    playerPoll();
-  } else {
-    show('s-player-join');
   }
-}
 
-async function playerJoin() {
-  const name = el('player-name').value.trim();
-  if (!name) return;
-  const state = await load();
-  if (!state) { showErr('join-error','Finner ikke spillet. Be verten starte på nytt.'); return; }
-  if (state.phase!=='lobby') { showErr('join-error','Spillet er allerede i gang — vent på neste runde.'); return; }
-  const id = 'p_'+Date.now()+'_'+Math.random().toString(36).slice(2,5);
-  state.players[id]={id,name,score:0};
-  await save(state);
-  localStorage.setItem('my_pid',id);
-  localStorage.setItem('my_pname',name);
-  el('wait-av').textContent=initials(name);
-  el('wait-name').textContent=name;
-  show('s-player-wait');
-  playerPoll();
-}
-
-function showErr(id,msg){const e=el(id);e.textContent=msg;e.style.display='block';}
-
-let playerPolling=true;
-async function playerPoll() {
-  if(!playerPolling) return;
-  const state = await load();
-  if (state) {
-    if (state.gameEnded) { show('s-player-results'); renderPlayerResults(state); return; }
-    if (state.phase==='playing') { show('s-player-vote'); renderPlayerVote(state); }
+  // ---- HOST ----
+  function startHostListening() {
+    const { dbRef, onValue } = window;
+    onValue(dbRef(''), (snap) => {
+      gameState = snap.val() || {};
+      renderHost();
+    });
   }
-  setTimeout(playerPoll, POLL_MS);
-}
 
-function renderPlayerVote(state) {
-  const qi=state.currentQ; const q=Qs[qi]; const id=myId();
-  const myVotes=(state.playerVotes[id]||{});
-  const voted=myVotes[qi]!==undefined;
+  function renderHost() {
+    if (!gameState) return;
+    const phase = gameState.phase || 'lobby';
+    const players = gameState.players || {};
+    const playerList = Object.values(players);
 
-  el('player-dots').innerHTML=Qs.map((_,i)=>`<div class="dot ${i<qi?'done':i===qi?'active':''}"></div>`).join('');
-  el('player-q-num').textContent=`// spørsmål ${qi+1} av ${Qs.length}`;
-  el('player-q-text').textContent=q.text;
-  el('player-q-tag').textContent='// '+q.tag;
+    // Update player lists
+    renderPlayerList(playerList, 'player-list');
+    renderPlayerList(playerList, 'player-list2');
+    document.getElementById('player-count').textContent = playerList.length;
+    document.getElementById('lobby-count').textContent = playerList.length;
 
-  if (voted) {
-    el('player-opts').innerHTML='';
-    el('comment-section').style.display='none';
-    el('voted-box').style.display='block';
-  } else {
-    selectedOpt=null;
-    el('player-opts').innerHTML=q.opts.map((o,i)=>`<button class="player-opt-btn" onclick="selectOpt(${i},this)">${o}</button>`).join('');
-    el('comment-section').style.display='none';
-    el('voted-box').style.display='none';
-    el('player-comment').value='';
+    if (phase === 'lobby') {
+      document.getElementById('host-lobby').style.display = 'block';
+      document.getElementById('host-question').style.display = 'none';
+      document.getElementById('host-final').style.display = 'none';
+    } else if (phase === 'question') {
+      const qIdx = gameState.currentQuestion || 0;
+      document.getElementById('host-lobby').style.display = 'none';
+      document.getElementById('host-question').style.display = 'block';
+      document.getElementById('host-final').style.display = 'none';
+      renderHostQuestion(qIdx, players);
+    } else if (phase === 'final') {
+      document.getElementById('host-lobby').style.display = 'none';
+      document.getElementById('host-question').style.display = 'none';
+      document.getElementById('host-final').style.display = 'block';
+      renderFinalScoreboard(players);
+    }
   }
-}
 
-function selectOpt(i, btn) {
-  document.querySelectorAll('.player-opt-btn').forEach(b=>b.classList.remove('chosen'));
-  btn.classList.add('chosen');
-  selectedOpt=i;
-  el('comment-section').style.display='block';
-}
+  function renderPlayerList(players, containerId) {
+    const el = document.getElementById(containerId);
+    if (!el) return;
+    if (!players.length) { el.innerHTML = '<p style="color:#666;font-size:0.85em">Ingen ennå...</p>'; return; }
+    el.innerHTML = players.map(p =>
+      `<div class="player-chip"><div class="dot"></div>${p.name} <span style="color:#888;font-size:0.8em">${p.role || ''}</span></div>`
+    ).join('');
+  }
 
-async function playerSubmit() {
-  if (selectedOpt===null) return;
-  const state=await load();
-  const id=myId(); const qi=state.currentQ;
-  if (!state.playerVotes[id]) state.playerVotes[id]={};
-  if (state.playerVotes[id][qi]!==undefined) return;
-  state.playerVotes[id][qi]=selectedOpt;
-  if (!state.votes[qi]) state.votes[qi]={};
-  state.votes[qi][selectedOpt]=(state.votes[qi][selectedOpt]||0)+1;
-  const comment=el('player-comment').value.trim();
-  if (!state.comments[qi]) state.comments[qi]={};
-  state.comments[qi][id]={opt:selectedOpt, text:comment};
-  await save(state);
-  el('comment-section').style.display='none';
-  el('voted-box').style.display='block';
-  el('player-opts').querySelectorAll('button').forEach(b=>b.disabled=true);
-}
+  function renderHostQuestion(qIdx, players) {
+    const q = window.QUESTIONS[qIdx];
+    document.getElementById('q-num').textContent = qIdx + 1;
+    document.getElementById('host-q-text').textContent = q.q;
 
-function renderPlayerResults(state) {
-  const id=myId(); const me=state.players[id];
-  const players=Object.values(state.players).sort((a,b)=>b.score-a.score);
-  const w=players[0];
-  el('player-res-sub').textContent=`Du stemte med flertallet ${me?me.score:0} av ${Qs.length} ganger`;
-  el('player-winner').innerHTML=`<div class="winner-badge">🏆</div><div><div class="winner-name">${w?w.name:'—'}</div><div class="winner-score">Flertall ${w?w.score:0}/${Qs.length} ganger</div></div>`;
-  el('player-scoreboard').innerHTML=players.map((p,i)=>`
-    <div class="score-row ${p.id===id?'me':''}"><div class="score-rank">${['🥇','🥈','🥉'][i]||i+1}</div><div class="avatar">${initials(p.name)}</div><div class="score-name">${p.name}</div><div class="score-pts">${p.score}/${Qs.length}</div></div>`).join('');
-}
+    // Tally votes
+    const votes = {0:0, 1:0, 2:0};
+    const total = Object.keys(players).length;
+    let voted = 0;
+    const comments = [];
 
-// --- INIT ---
-window.onload = async function() {
-  if (window.location.search.includes('join=1')) { await playerInit(); }
-  else { await hostInit(); }
-};
+    Object.values(players).forEach(p => {
+      const ans = p.answers?.[qIdx];
+      if (ans !== undefined && ans !== null) {
+        const opt = typeof ans === 'object' ? ans.option : ans;
+        if (opt !== undefined) votes[opt] = (votes[opt] || 0) + 1;
+        if (typeof ans === 'object' && ans.comment) comments.push({name: p.name, comment: ans.comment});
+        voted++;
+      }
+    });
+
+    // Bars
+    const colors = ['a','b','c'];
+    const barsHtml = q.options.map((opt, i) => {
+      const pct = total > 0 ? Math.round((votes[i]||0) / total * 100) : 0;
+      return `<div class="result-bar-wrap">
+        <div class="result-label">${opt}</div>
+        <div class="result-bar-bg"><div class="result-bar ${colors[i]}" style="width:${pct}%">${pct > 10 ? pct+'%' : ''}</div></div>
+        <div class="result-count">${votes[i]||0} stemmer</div>
+      </div>`;
+    }).join('');
+    document.getElementById('host-results').innerHTML = barsHtml;
+
+    document.getElementById('vote-progress').textContent = `${voted} av ${total} har stemt`;
+
+    // Comments
+    const commentsHtml = comments.length
+      ? comments.map(c => `<div class="comment-item"><strong>${c.name}:</strong> ${c.comment}</div>`).join('')
+      : '<p style="color:#555;font-size:0.85em">Ingen kommentarer ennå</p>';
+    document.getElementById('host-comments').innerHTML = commentsHtml;
+
+    // Buttons
+    const prevBtn = document.getElementById('prev-btn');
+    const nextBtn = document.getElementById('next-btn');
+    const finalBtn = document.getElementById('final-btn');
+    prevBtn.disabled = qIdx === 0;
+    if (qIdx === 9) {
+      nextBtn.style.display = 'none';
+      finalBtn.style.display = 'inline-block';
+    } else {
+      nextBtn.style.display = 'inline-block';
+      finalBtn.style.display = 'none';
+    }
+  }
+
+  function renderFinalScoreboard(players) {
+    const playerList = Object.values(players);
+    const scores = playerList.map(p => {
+      let score = 0;
+      window.QUESTIONS.forEach((q, qi) => {
+        // Find majority
+        const votes = {0:0,1:0,2:0};
+        playerList.forEach(pl => {
+          const ans = pl.answers?.[qi];
+          if (ans !== undefined && ans !== null) {
+            const opt = typeof ans === 'object' ? ans.option : ans;
+            if (opt !== undefined) votes[opt] = (votes[opt]||0)+1;
+          }
+        });
+        const majority = parseInt(Object.entries(votes).sort((a,b)=>b[1]-a[1])[0][0]);
+        const myAns = p.answers?.[qi];
+        const myOpt = myAns !== undefined ? (typeof myAns === 'object' ? myAns.option : myAns) : undefined;
+        if (myOpt === majority && votes[majority] > 0) score++;
+      });
+      return { name: p.name, role: p.role, score };
+    }).sort((a,b) => b.score - a.score);
+
+    const medals = ['🥇','🥈','🥉'];
+    const classes = ['first','second','third'];
+    document.getElementById('final-scoreboard').innerHTML = scores.map((s, i) => `
+      <div class="score-item ${classes[i] || ''}">
+        <span class="score-rank">${medals[i] || (i+1)+'.'}  </span>
+        <span class="score-name">${s.name} <span style="color:#888;font-size:0.85em">${s.role||''}</span></span>
+        <span class="score-pts">${s.score}/10 ✓</span>
+      </div>
+    `).join('');
+  }
+
+  // ---- HOST CONTROLS ----
+  window.startGame = async function() {
+    const { dbRef, dbUpdate } = window;
+    await dbUpdate(dbRef(''), { phase: 'question', currentQuestion: 0 });
+  };
+
+  window.nextQuestion = async function() {
+    const { dbRef, dbUpdate } = window;
+    const cur = gameState?.currentQuestion || 0;
+    if (cur < 9) await dbUpdate(dbRef(''), { currentQuestion: cur + 1 });
+  };
+
+  window.prevQuestion = async function() {
+    const { dbRef, dbUpdate } = window;
+    const cur = gameState?.currentQuestion || 0;
+    if (cur > 0) await dbUpdate(dbRef(''), { currentQuestion: cur - 1 });
+  };
+
+  window.showFinal = async function() {
+    const { dbRef, dbUpdate } = window;
+    await dbUpdate(dbRef(''), { phase: 'final' });
+  };
+
+  window.resetGame = async function() {
+    if (!confirm('Sikker? Dette sletter alle spillere og svar.')) return;
+    const { dbRef, dbSet } = window;
+    await dbSet(dbRef(''), null);
+  };
+
+  // ---- PLAYER ----
+  function startPlayerListening() {
+    const { dbRef, onValue } = window;
+    onValue(dbRef(''), (snap) => {
+      gameState = snap.val() || {};
+      if (myPlayerId) renderPlayer();
+    });
+  }
+
+  window.registerPlayer = async function() {
+    const name = document.getElementById('player-name').value.trim();
+    const role = document.getElementById('player-role').value;
+    if (!name) { alert('Skriv inn navnet ditt!'); return; }
+
+    const { dbRef, dbSet } = window;
+    myPlayerId = 'p_' + Date.now() + '_' + Math.random().toString(36).substr(2,5);
+    myName = name;
+
+    await dbSet(dbRef(`players/${myPlayerId}`), { name, role, answers: {} });
+    document.getElementById('registered-name').textContent = '✓ ' + name;
+    document.getElementById('player-register').style.display = 'none';
+    document.getElementById('player-waiting').style.display = 'block';
+    renderPlayer();
+  };
+
+  function renderPlayer() {
+    if (!gameState || !myPlayerId) return;
+    const phase = gameState.phase || 'lobby';
+
+    if (phase === 'lobby') {
+      document.getElementById('player-register').style.display = 'none';
+      document.getElementById('player-waiting').style.display = 'block';
+      document.getElementById('player-question').style.display = 'none';
+      document.getElementById('player-voted').style.display = 'none';
+      document.getElementById('player-final').style.display = 'none';
+    } else if (phase === 'question') {
+      const qIdx = gameState.currentQuestion || 0;
+      const myPlayer = gameState.players?.[myPlayerId];
+      const hasAnswered = myPlayer?.answers?.[qIdx] !== undefined;
+
+      document.getElementById('player-waiting').style.display = 'none';
+      document.getElementById('player-final').style.display = 'none';
+
+      if (hasAnswered) {
+        document.getElementById('player-question').style.display = 'none';
+        document.getElementById('player-voted').style.display = 'block';
+      } else {
+        document.getElementById('player-voted').style.display = 'none';
+        document.getElementById('player-question').style.display = 'block';
+        renderPlayerQuestion(qIdx);
+      }
+    } else if (phase === 'final') {
+      document.getElementById('player-waiting').style.display = 'none';
+      document.getElementById('player-question').style.display = 'none';
+      document.getElementById('player-voted').style.display = 'none';
+      document.getElementById('player-final').style.display = 'block';
+      renderPlayerFinal();
+    }
+  }
+
+  function renderPlayerQuestion(qIdx) {
+    const q = window.QUESTIONS[qIdx];
+    document.getElementById('p-q-num').textContent = `Spørsmål ${qIdx+1} av 10`;
+    document.getElementById('p-q-text').textContent = q.q;
+    selectedOption = null;
+    document.getElementById('p-comment-area').style.display = 'none';
+    document.getElementById('p-comment').value = '';
+
+    document.getElementById('p-options').innerHTML = q.options.map((opt, i) =>
+      `<button class="option-btn" onclick="selectOption(${i}, this)">${['A','B','C'][i]}. ${opt}</button>`
+    ).join('');
+  }
+
+  window.selectOption = function(idx, btn) {
+    selectedOption = idx;
+    document.querySelectorAll('.option-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    document.getElementById('p-comment-area').style.display = 'block';
+  };
+
+  window.submitAnswer = async function() {
+    if (selectedOption === null) { alert('Velg et alternativ!'); return; }
+    const { dbRef, dbSet } = window;
+    const qIdx = gameState.currentQuestion || 0;
+    const comment = document.getElementById('p-comment').value.trim();
+
+    await dbSet(dbRef(`players/${myPlayerId}/answers/${qIdx}`), {
+      option: selectedOption,
+      comment: comment || null
+    });
+
+    document.getElementById('player-question').style.display = 'none';
+    document.getElementById('player-voted').style.display = 'block';
+  };
+
+  function renderPlayerFinal() {
+    const players = Object.values(gameState.players || {});
+    const myPlayer = gameState.players?.[myPlayerId];
+    let myScore = 0;
+
+    window.QUESTIONS.forEach((q, qi) => {
+      const votes = {0:0,1:0,2:0};
+      players.forEach(p => {
+        const ans = p.answers?.[qi];
+        if (ans !== undefined && ans !== null) {
+          const opt = typeof ans === 'object' ? ans.option : ans;
+          if (opt !== undefined) votes[opt] = (votes[opt]||0)+1;
+        }
+      });
+      const majority = parseInt(Object.entries(votes).sort((a,b)=>b[1]-a[1])[0][0]);
+      const myAns = myPlayer?.answers?.[qi];
+      const myOpt = myAns !== undefined ? (typeof myAns === 'object' ? myAns.option : myAns) : undefined;
+      if (myOpt === majority && votes[majority] > 0) myScore++;
+    });
+
+    document.getElementById('my-score-num').textContent = myScore;
+
+    const scores = players.map(p => {
+      let score = 0;
+      window.QUESTIONS.forEach((q, qi) => {
+        const votes = {0:0,1:0,2:0};
+        players.forEach(pl => {
+          const ans = pl.answers?.[qi];
+          if (ans !== undefined && ans !== null) {
+            const opt = typeof ans === 'object' ? ans.option : ans;
+            if (opt !== undefined) votes[opt] = (votes[opt]||0)+1;
+          }
+        });
+        const majority = parseInt(Object.entries(votes).sort((a,b)=>b[1]-a[1])[0][0]);
+        const myAns = p.answers?.[qi];
+        const myOpt = myAns !== undefined ? (typeof myAns === 'object' ? myAns.option : myAns) : undefined;
+        if (myOpt === majority && votes[majority] > 0) score++;
+      });
+      return { name: p.name, score };
+    }).sort((a,b) => b.score - a.score);
+
+    const medals = ['🥇','🥈','🥉'];
+    document.getElementById('player-scoreboard').innerHTML = '<h3 style="margin-bottom:12px;color:#f093fb">Poengtavle</h3>' +
+      scores.map((s,i) => `<div class="score-item ${i<3?['first','second','third'][i]:''}">
+        <span class="score-rank">${medals[i]||i+1+'.'}</span>
+        <span class="score-name">${s.name}</span>
+        <span class="score-pts">${s.score}/10</span>
+      </div>`).join('');
+  }
 </script>
 </body>
 </html>
