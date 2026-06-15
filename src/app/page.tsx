@@ -1,3 +1,4 @@
+import PacMan from "@/components/PacMan";
 import Link from 'next/link'
 import { experiments } from '@/lib/experiments'
 import { getArticles } from '@/lib/articles'
