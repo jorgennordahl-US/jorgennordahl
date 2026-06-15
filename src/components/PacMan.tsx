@@ -39,7 +39,9 @@ export default function PacMan() {
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const ctx = canvas.getContext("2d")!;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
     let animId: number;
 
     const state = {
@@ -50,18 +52,12 @@ export default function PacMan() {
       following: false,
       mouseX: 0, mouseY: 0,
       dots: [] as Dot[],
-      eating: 0, // frames since last eat (for chomp effect)
-    };
-
-    const resize = () => {
-      canvas.width = canvas.offsetWidth;
-      canvas.height = canvas.offsetHeight;
-      spawnDots();
+      eating: 0,
     };
 
     function spawnDots() {
-      const w = canvas.width, h = canvas.height;
-      state.dots = CODE_SNIPPETS.map((text, i) => ({
+      const w = canvas!.width, h = canvas!.height;
+      state.dots = CODE_SNIPPETS.map((text) => ({
         x: w * 0.48 + Math.random() * (w * 0.5),
         y: 40 + Math.random() * (h - 80),
         text,
@@ -71,6 +67,11 @@ export default function PacMan() {
       }));
     }
 
+    const resize = () => {
+      canvas.width = canvas.offsetWidth;
+      canvas.height = canvas.offsetHeight;
+      spawnDots();
+    };
     resize();
     window.addEventListener("resize", resize);
 
@@ -83,9 +84,7 @@ export default function PacMan() {
       state.following = Math.sqrt(dx * dx + dy * dy) < 220;
     };
     canvas.addEventListener("mousemove", onMouseMove);
-
-    const onMouseLeave = () => { state.following = false; };
-    canvas.addEventListener("mouseleave", onMouseLeave);
+    canvas.addEventListener("mouseleave", () => { state.following = false; });
 
     let frame = 0;
 
@@ -94,32 +93,28 @@ export default function PacMan() {
       const w = canvas.width, h = canvas.height;
       ctx.clearRect(0, 0, w, h);
 
-      // Mouth animation
       state.mouth += 0.07 * state.mouthDir;
       if (state.mouth > 0.38) state.mouthDir = -1;
       if (state.mouth < 0.02) state.mouthDir = 1;
       if (state.eating > 0) state.eating--;
 
-      // Movement
       if (state.following) {
         const dx = state.mouseX - state.x;
         const dy = state.mouseY - state.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
         if (dist > 6) {
-          const speed = 3;
-          state.vx = (dx / dist) * speed;
-          state.vy = (dy / dist) * speed;
+          state.vx = (dx / dist) * 3;
+          state.vy = (dy / dist) * 3;
         }
       } else {
-        // Bounce in right half
         if (state.x < w * 0.44) state.vx = Math.abs(state.vx) + 0.1;
-        if (state.x > w - 25)   state.vx = -(Math.abs(state.vx));
+        if (state.x > w - 25)   state.vx = -Math.abs(state.vx);
         if (state.y < 25)        state.vy = Math.abs(state.vy);
         if (state.y > h - 25)    state.vy = -Math.abs(state.vy);
         if (Math.random() < 0.008) state.vx += (Math.random() - 0.5);
         if (Math.random() < 0.008) state.vy += (Math.random() - 0.5);
-        const spd = Math.sqrt(state.vx**2 + state.vy**2);
-        if (spd > 2.2) { state.vx = (state.vx/spd)*2.2; state.vy = (state.vy/spd)*2.2; }
+        const spd = Math.sqrt(state.vx ** 2 + state.vy ** 2);
+        if (spd > 2.2) { state.vx = (state.vx / spd) * 2.2; state.vy = (state.vy / spd) * 2.2; }
         if (spd < 0.8) { state.vx *= 1.4; state.vy *= 1.4; }
       }
 
@@ -131,19 +126,17 @@ export default function PacMan() {
       state.dots.forEach(dot => {
         if (dot.eaten) return;
         const tw = ctx.measureText(dot.text).width;
-        const dx = dot.x + tw/2 - state.x;
+        const dx = dot.x + tw / 2 - state.x;
         const dy = dot.y - state.y;
-        if (Math.sqrt(dx*dx + dy*dy) < 38) {
+        if (Math.sqrt(dx * dx + dy * dy) < 38) {
           dot.eaten = true;
           state.eating = 12;
         }
       });
 
-      // Respawn all eaten after delay
-      const allEaten = state.dots.every(d => d.eaten);
-      if (allEaten) spawnDots();
+      if (state.dots.every(d => d.eaten)) spawnDots();
 
-      // Draw eaten dots floating away
+      // Draw dots
       state.dots.forEach(dot => {
         if (dot.eaten) {
           dot.floatY -= 0.8;
@@ -157,15 +150,10 @@ export default function PacMan() {
           ctx.restore();
           return;
         }
-
-        // Draw uneaten dots
         const pulse = 0.85 + Math.sin(frame * 0.04 + dot.x) * 0.15;
         ctx.save();
         ctx.globalAlpha = pulse;
         ctx.font = "600 11px monospace";
-        ctx.fillStyle = "#16a34a";
-
-        // Subtle background pill
         const tw = ctx.measureText(dot.text).width;
         ctx.fillStyle = "rgba(22,163,74,0.08)";
         ctx.beginPath();
@@ -177,13 +165,12 @@ export default function PacMan() {
       });
 
       // Draw Pac-Man
-      const R = 26 + (state.eating > 0 ? 3 : 0); // slightly bigger when eating
+      const R = 26 + (state.eating > 0 ? 3 : 0);
       const mouthAngle = state.eating > 0 ? 0.55 : state.mouth;
 
       ctx.save();
       ctx.shadowColor = "#16a34a";
       ctx.shadowBlur = state.eating > 0 ? 28 : 14;
-
       ctx.beginPath();
       ctx.moveTo(state.x, state.y);
       ctx.arc(state.x, state.y, R, state.angle + mouthAngle, state.angle + Math.PI * 2 - mouthAngle);
@@ -204,7 +191,6 @@ export default function PacMan() {
       ctx.fillStyle = "#000";
       ctx.fill();
 
-      // "CHOMP!" text when eating
       if (state.eating > 6) {
         ctx.save();
         ctx.globalAlpha = state.eating / 12;
@@ -221,8 +207,6 @@ export default function PacMan() {
     return () => {
       cancelAnimationFrame(animId);
       window.removeEventListener("resize", resize);
-      canvas.removeEventListener("mousemove", onMouseMove);
-      canvas.removeEventListener("mouseleave", onMouseLeave);
     };
   }, []);
 
