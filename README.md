@@ -57,3 +57,4 @@ Edit the `demos` array in `src/app/demos/page.tsx`.
 2. Import repo at [vercel.com](https://vercel.com)
 3. Add custom domain `jorgennordahl.no` in Vercel settings
 4. Point DNS: add an A record to `76.76.21.21` at your registrar
+
