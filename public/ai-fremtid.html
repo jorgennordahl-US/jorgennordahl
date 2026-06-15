@@ -4,807 +4,457 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Spå AI-fremtiden 🔮</title>
-
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getDatabase, ref, set, get, onValue, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyBLdfpZ_WyCB64KbZ2eaEqKfC6XXF0Km7U",
-    authDomain: "vivicta-ai-game.firebaseapp.com",
-    databaseURL: "https://vivicta-ai-game-default-rtdb.europe-west1.firebasedatabase.app",
-    projectId: "vivicta-ai-game",
-    storageBucket: "vivicta-ai-game.firebasestorage.app",
-    messagingSenderId: "773671473181",
-    appId: "1:773671473181:web:24e0c0209e0fae9afb36f4"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const db = getDatabase(app);
-
-  const QUESTIONS = [
-    {
-      q: "Vil AI om 2 år kunne erstatte en erfaren ERP-konsulent på et standard D365-prosjekt?",
-      options: ["Ja, 100%", "Delvis – de enkle tingene", "Nei, ikke uten mennesker"]
-    },
-    {
-      q: "Kan AI om 2 år gjennomføre en komplett periodestenging i D365 uten menneskelig innblanding?",
-      options: ["Ja, fullt automatisk", "Nesten – trenger litt hjelp", "Nei, for komplekst"]
-    },
-    {
-      q: "Vil AI om 2 år kunne skrive og teste egendefinert X++ kode i D365 FO?",
-      options: ["Ja, bedre enn oss", "Ja, men vi må qualitysikre", "Nei, trenger utviklere"]
-    },
-    {
-      q: "Hvor mye av Vivictas tjenestekatalog vil AI kunne levere automatisk om 2 år?",
-      options: ["Over 50%", "20–50%", "Under 20%"]
-    },
-    {
-      q: "Vil AI-agenter om 2 år kjøre kundestøtte for D365 uten at kunden merker det?",
-      options: ["Ja, usynlig AI", "Delvis – AI + menneske", "Nei, kunder vil merke det"]
-    },
-    {
-      q: "Hva skjer med antall ERP-konsulenter i Norden om 2 år?",
-      options: ["Færre – AI tar over", "Omtrent samme antall", "Flere – etterspørselen øker"]
-    },
-    {
-      q: "Vil AI om 2 år klare å lede en kundeWorkshop og samle krav alene?",
-      options: ["Ja, bedre enn mange", "Kanskje med fasilitator", "Nei, trenger ekte mennesker"]
-    },
-    {
-      q: "Vil AI om 2 år klare å lage en komplett tilbudsrespons for et D365-anbud?",
-      options: ["Ja, komplett", "Ja, men vi finjusterer", "Nei, for strategisk"]
-    },
-    {
-      q: "Hva vil være den største utfordringen med AI i ERP om 2 år?",
-      options: ["Tillit og godkjenning", "Teknisk modenhet", "Kunder er ikke klare"]
-    },
-    {
-      q: "Hvem i rommet tror du bruker AI mest aktivt i jobben sin om 2 år?",
-      options: ["Konsulentene", "Salg og marked", "Leder og strategi"]
-    }
-  ];
-
-  const urlParams = new URLSearchParams(window.location.search);
-  const isPlayer = urlParams.has('join');
-  const GAME_REF = 'game1';
-
-  window.dbRef = (path) => ref(db, `${GAME_REF}/${path}`);
-  window.dbSet = set;
-  window.dbGet = get;
-  window.dbUpdate = update;
-  window.onValue = onValue;
-  window.QUESTIONS = QUESTIONS;
-  window.isPlayer = isPlayer;
-  window.db = db;
-  window.ref = ref;
-  window.GAME_REF = GAME_REF;
-
-  window.dispatchEvent(new Event('firebase-ready'));
-</script>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    font-family: 'Segoe UI', sans-serif;
-    background: #0f0c29;
-    background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
-    min-height: 100vh;
-    color: white;
-  }
+  body { font-family: 'Segoe UI', sans-serif; background: linear-gradient(135deg, #0f0c29, #302b63, #24243e); min-height: 100vh; color: white; }
 
-  /* HOST STYLES */
-  #host-app { display: none; padding: 20px; max-width: 1200px; margin: 0 auto; }
-  .host-header { text-align: center; margin-bottom: 30px; }
-  .host-header h1 { font-size: 2.5em; background: linear-gradient(90deg, #f093fb, #f5576c, #fda085); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-  .host-header p { color: #aaa; margin-top: 8px; }
+  #host-app, #player-app { display: none; padding: 20px; max-width: 1200px; margin: 0 auto; }
+  .header { text-align: center; margin-bottom: 30px; }
+  .header h1 { font-size: 2.5em; background: linear-gradient(90deg, #f093fb, #f5576c, #fda085); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .header p { color: #aaa; margin-top: 8px; }
 
-  .host-grid { display: grid; grid-template-columns: 300px 1fr; gap: 20px; }
+  .grid2 { display: grid; grid-template-columns: 280px 1fr; gap: 20px; }
+  .card { background: rgba(255,255,255,0.07); border-radius: 16px; padding: 20px; }
 
-  .qr-panel {
-    background: rgba(255,255,255,0.07);
-    border-radius: 16px;
-    padding: 20px;
-    text-align: center;
-  }
-  .qr-panel h3 { margin-bottom: 15px; font-size: 1em; color: #ccc; }
-  #qrcode { display: flex; justify-content: center; margin: 10px 0; }
-  #qrcode canvas, #qrcode img { border-radius: 8px; }
+  #qrcode img, #qrcode2 img { border-radius: 8px; display: block; margin: 10px auto; }
+  .small-label { font-size: 0.8em; color: #888; text-align: center; margin-top: 6px; }
 
-  .players-panel {
-    background: rgba(255,255,255,0.07);
-    border-radius: 16px;
-    padding: 20px;
-    margin-top: 15px;
-  }
-  .players-panel h3 { margin-bottom: 12px; color: #f093fb; }
-  #player-list { display: flex; flex-wrap: wrap; gap: 8px; }
-  .player-chip {
-    background: rgba(240,147,251,0.2);
-    border: 1px solid rgba(240,147,251,0.4);
-    border-radius: 20px;
-    padding: 5px 14px;
-    font-size: 0.85em;
-    display: flex; align-items: center; gap: 6px;
-  }
-  .player-chip .dot { width: 8px; height: 8px; border-radius: 50%; background: #4ade80; }
-  .player-chip .dot.waiting { background: #facc15; }
+  .player-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .chip { background: rgba(240,147,251,0.2); border: 1px solid rgba(240,147,251,0.4); border-radius: 20px; padding: 5px 14px; font-size: 0.85em; }
 
-  .control-panel { display: flex; flex-direction: column; gap: 15px; }
+  .lobby-center { text-align: center; padding: 40px 20px; }
+  .big-num { font-size: 4em; font-weight: bold; color: #f093fb; margin: 15px 0; }
+  .btn-big { padding: 18px 50px; background: linear-gradient(90deg, #f093fb, #f5576c); border: none; border-radius: 40px; font-size: 1.3em; font-weight: bold; color: white; cursor: pointer; transition: all 0.2s; }
+  .btn-big:hover { transform: scale(1.05); }
 
-  .question-card {
-    background: rgba(255,255,255,0.07);
-    border-radius: 16px;
-    padding: 20px;
-  }
-  .question-card h3 { color: #f093fb; margin-bottom: 8px; font-size: 0.9em; text-transform: uppercase; letter-spacing: 1px; }
-  .question-text { font-size: 1.2em; margin-bottom: 15px; line-height: 1.4; }
+  .q-label { color: #f093fb; font-size: 0.85em; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  .q-text { font-size: 1.2em; line-height: 1.4; margin-bottom: 18px; }
 
-  .results-bars { display: flex; flex-direction: column; gap: 10px; }
-  .result-bar-wrap { display: flex; align-items: center; gap: 10px; }
-  .result-label { font-size: 0.85em; width: 200px; flex-shrink: 0; }
-  .result-bar-bg { flex: 1; background: rgba(255,255,255,0.1); border-radius: 20px; height: 28px; overflow: hidden; }
-  .result-bar { height: 100%; border-radius: 20px; transition: width 0.5s ease; display: flex; align-items: center; padding-left: 10px; font-size: 0.8em; font-weight: bold; min-width: 30px; }
-  .result-bar.a { background: linear-gradient(90deg, #f093fb, #f5576c); }
-  .result-bar.b { background: linear-gradient(90deg, #4facfe, #00f2fe); }
-  .result-bar.c { background: linear-gradient(90deg, #43e97b, #38f9d7); }
-  .result-count { font-size: 0.85em; color: #aaa; width: 60px; text-align: right; }
+  .bars { display: flex; flex-direction: column; gap: 10px; }
+  .bar-row { display: flex; align-items: center; gap: 10px; }
+  .bar-lbl { font-size: 0.85em; width: 190px; flex-shrink: 0; }
+  .bar-bg { flex: 1; background: rgba(255,255,255,0.1); border-radius: 20px; height: 28px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 20px; transition: width 0.5s; display: flex; align-items: center; padding-left: 10px; font-size: 0.8em; font-weight: bold; min-width: 0; }
+  .bar-a { background: linear-gradient(90deg, #f093fb, #f5576c); }
+  .bar-b { background: linear-gradient(90deg, #4facfe, #00f2fe); }
+  .bar-c { background: linear-gradient(90deg, #43e97b, #38f9d7); }
+  .bar-cnt { font-size: 0.85em; color: #aaa; width: 70px; text-align: right; }
 
-  .comments-box { margin-top: 15px; }
-  .comments-box h4 { color: #aaa; font-size: 0.85em; margin-bottom: 8px; }
-  .comment-item { background: rgba(255,255,255,0.05); border-radius: 8px; padding: 8px 12px; margin-bottom: 6px; font-size: 0.85em; }
-  .comment-item strong { color: #f093fb; }
+  .progress-txt { text-align: center; color: #aaa; font-size: 0.9em; margin-top: 10px; }
 
-  .vote-progress { text-align: center; color: #aaa; font-size: 0.9em; margin-top: 10px; }
+  .comments { margin-top: 15px; }
+  .comments h4 { color: #aaa; font-size: 0.85em; margin-bottom: 8px; }
+  .comment { background: rgba(255,255,255,0.05); border-radius: 8px; padding: 8px 12px; margin-bottom: 6px; font-size: 0.85em; }
+  .comment strong { color: #f093fb; }
 
   .btn-row { display: flex; gap: 10px; justify-content: center; margin-top: 20px; }
-  .btn {
-    padding: 12px 28px;
-    border: none;
-    border-radius: 30px;
-    font-size: 1em;
-    font-weight: bold;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-  .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.3); }
+  .btn { padding: 12px 28px; border: none; border-radius: 30px; font-size: 1em; font-weight: bold; cursor: pointer; transition: all 0.2s; }
+  .btn:hover { transform: translateY(-2px); }
   .btn-primary { background: linear-gradient(90deg, #f093fb, #f5576c); color: white; }
   .btn-secondary { background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); }
   .btn-success { background: linear-gradient(90deg, #43e97b, #38f9d7); color: #1a1a1a; }
   .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
 
-  /* SCOREBOARD */
-  .scoreboard {
-    background: rgba(255,255,255,0.07);
-    border-radius: 16px;
-    padding: 20px;
-  }
-  .scoreboard h3 { color: #fda085; margin-bottom: 15px; }
-  .score-item {
-    display: flex; align-items: center; gap: 12px;
-    padding: 10px;
-    border-radius: 10px;
-    margin-bottom: 8px;
-    background: rgba(255,255,255,0.05);
-  }
-  .score-item.first { background: rgba(253,224,71,0.15); border: 1px solid rgba(253,224,71,0.4); }
-  .score-item.second { background: rgba(209,213,219,0.1); }
-  .score-item.third { background: rgba(180,100,50,0.1); }
+  .score-item { display: flex; align-items: center; gap: 12px; padding: 10px; border-radius: 10px; margin-bottom: 8px; background: rgba(255,255,255,0.05); }
+  .score-item.s1 { background: rgba(253,224,71,0.15); border: 1px solid rgba(253,224,71,0.4); }
+  .score-item.s2 { background: rgba(209,213,219,0.1); }
+  .score-item.s3 { background: rgba(180,100,50,0.1); }
   .score-rank { font-size: 1.4em; width: 35px; }
   .score-name { flex: 1; font-weight: bold; }
   .score-pts { color: #f093fb; font-weight: bold; }
 
-  /* LOBBY HOST */
-  .lobby-screen { text-align: center; padding: 40px 20px; }
-  .lobby-screen h2 { font-size: 2em; margin-bottom: 10px; }
-  .lobby-screen p { color: #aaa; margin-bottom: 30px; }
-  .start-btn-big {
-    padding: 18px 50px;
-    background: linear-gradient(90deg, #f093fb, #f5576c);
-    border: none; border-radius: 40px;
-    font-size: 1.3em; font-weight: bold; color: white;
-    cursor: pointer; transition: all 0.2s;
-  }
-  .start-btn-big:hover { transform: scale(1.05); box-shadow: 0 10px 30px rgba(240,93,251,0.4); }
-  .player-count { font-size: 3em; font-weight: bold; color: #f093fb; margin: 20px 0; }
+  .reset-btn { position: fixed; top: 15px; right: 15px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 8px 16px; border-radius: 20px; cursor: pointer; font-size: 0.8em; }
 
-  /* PLAYER STYLES */
-  #player-app { display: none; padding: 20px; max-width: 480px; margin: 0 auto; }
-  .player-header { text-align: center; margin-bottom: 30px; }
-  .player-header h1 { font-size: 1.8em; background: linear-gradient(90deg, #f093fb, #f5576c); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-
-  .input-card {
-    background: rgba(255,255,255,0.07);
-    border-radius: 16px;
-    padding: 25px;
-    margin-bottom: 20px;
-  }
-  .input-card label { display: block; color: #ccc; margin-bottom: 8px; font-size: 0.9em; }
-  .input-card input, .input-card select {
-    width: 100%; padding: 12px 16px;
-    background: rgba(255,255,255,0.1);
-    border: 1px solid rgba(255,255,255,0.2);
-    border-radius: 10px; color: white;
-    font-size: 1em; outline: none;
-  }
-  .input-card input::placeholder { color: #666; }
-
-  .waiting-screen { text-align: center; padding: 40px 20px; }
-  .waiting-screen .pulse { font-size: 4em; animation: pulse 1.5s infinite; }
-  @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.1)} }
-  .waiting-screen h2 { margin: 20px 0 10px; font-size: 1.5em; }
-  .waiting-screen p { color: #aaa; }
-
-  .question-player {
-    background: rgba(255,255,255,0.07);
-    border-radius: 16px;
-    padding: 25px;
-  }
-  .q-number { color: #f093fb; font-size: 0.85em; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
-  .q-text { font-size: 1.15em; line-height: 1.5; margin-bottom: 20px; }
-  .option-btn {
-    width: 100%; padding: 14px 18px;
-    background: rgba(255,255,255,0.08);
-    border: 1px solid rgba(255,255,255,0.15);
-    border-radius: 12px; color: white;
-    font-size: 0.95em; cursor: pointer;
-    margin-bottom: 10px; text-align: left;
-    transition: all 0.2s;
-  }
-  .option-btn:hover:not(.selected):not(:disabled) { background: rgba(240,147,251,0.2); border-color: #f093fb; }
-  .option-btn.selected { background: rgba(240,147,251,0.3); border-color: #f093fb; font-weight: bold; }
-  .option-btn:disabled { opacity: 0.6; cursor: default; }
-
-  .comment-area { margin-top: 15px; }
-  .comment-area textarea {
-    width: 100%; padding: 12px;
-    background: rgba(255,255,255,0.08);
-    border: 1px solid rgba(255,255,255,0.15);
-    border-radius: 10px; color: white;
-    font-size: 0.9em; resize: none; outline: none;
-    font-family: inherit;
-  }
-  .comment-area textarea::placeholder { color: #666; }
-
-  .submit-btn {
-    width: 100%; padding: 14px;
-    background: linear-gradient(90deg, #f093fb, #f5576c);
-    border: none; border-radius: 12px;
-    color: white; font-size: 1em; font-weight: bold;
-    cursor: pointer; margin-top: 12px;
-    transition: all 0.2s;
-  }
-  .submit-btn:hover { opacity: 0.9; }
+  /* PLAYER */
+  #player-app { max-width: 480px; }
+  .p-header { text-align: center; margin-bottom: 25px; }
+  .p-header h1 { font-size: 1.8em; background: linear-gradient(90deg, #f093fb, #f5576c); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  input, select { width: 100%; padding: 12px 16px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 10px; color: white; font-size: 1em; outline: none; margin-top: 6px; font-family: inherit; }
+  input::placeholder { color: #666; }
+  select option { background: #302b63; }
+  .field { margin-bottom: 16px; }
+  .field label { font-size: 0.9em; color: #ccc; }
+  .submit-btn { width: 100%; padding: 14px; background: linear-gradient(90deg, #f093fb, #f5576c); border: none; border-radius: 12px; color: white; font-size: 1em; font-weight: bold; cursor: pointer; margin-top: 8px; }
   .submit-btn:disabled { opacity: 0.4; cursor: default; }
 
-  .voted-screen { text-align: center; padding: 30px; }
-  .voted-screen h2 { font-size: 1.5em; margin: 15px 0 8px; }
-  .voted-screen p { color: #aaa; }
+  .waiting { text-align: center; padding: 50px 20px; }
+  .pulse { font-size: 4em; animation: pulse 1.5s infinite; display: block; }
+  @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.1)} }
 
-  .final-score-player {
-    background: rgba(255,255,255,0.07);
-    border-radius: 16px;
-    padding: 30px;
-    text-align: center;
-  }
-  .final-score-player h2 { font-size: 2em; margin-bottom: 20px; }
-  .my-score { font-size: 1.2em; margin: 15px 0; }
-  .my-score span { font-size: 2em; color: #f093fb; font-weight: bold; }
+  .opt-btn { width: 100%; padding: 14px 18px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; color: white; font-size: 0.95em; cursor: pointer; margin-bottom: 10px; text-align: left; transition: all 0.2s; }
+  .opt-btn:hover:not(.sel) { background: rgba(240,147,251,0.2); border-color: #f093fb; }
+  .opt-btn.sel { background: rgba(240,147,251,0.3); border-color: #f093fb; font-weight: bold; }
 
-  /* RESET BTN */
-  .reset-btn {
-    position: fixed; top: 15px; right: 15px;
-    background: rgba(255,255,255,0.1);
-    border: 1px solid rgba(255,255,255,0.2);
-    color: white; padding: 8px 16px;
-    border-radius: 20px; cursor: pointer; font-size: 0.8em;
-  }
-  .reset-btn:hover { background: rgba(255,80,80,0.3); }
+  textarea { width: 100%; padding: 12px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 10px; color: white; font-size: 0.9em; resize: none; outline: none; font-family: inherit; margin-top: 10px; }
+  textarea::placeholder { color: #666; }
 
-  .status-badge {
-    display: inline-block;
-    background: rgba(74,222,128,0.2);
-    border: 1px solid rgba(74,222,128,0.4);
-    color: #4ade80;
-    padding: 4px 12px; border-radius: 20px;
-    font-size: 0.8em; margin-top: 8px;
-  }
+  .voted { text-align: center; padding: 40px 20px; }
+  .section-title { color: #f093fb; font-size: 0.85em; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
 </style>
 </head>
 <body>
 
-<!-- HOST APP -->
+<!-- HOST -->
 <div id="host-app">
   <button class="reset-btn" onclick="resetGame()">🔄 Nytt spill</button>
+  <div class="header"><h1>🔮 Spå AI-fremtiden</h1><p>Vertskontroll</p></div>
 
-  <div class="host-header">
-    <h1>🔮 Spå AI-fremtiden</h1>
-    <p>Vertskontroll — du styrer spillet</p>
-  </div>
-
-  <!-- LOBBY -->
-  <div id="host-lobby">
-    <div class="host-grid">
+  <div id="h-lobby">
+    <div class="grid2">
       <div>
-        <div class="qr-panel">
-          <h3>Spillere scanner her</h3>
+        <div class="card" style="text-align:center">
+          <p style="color:#ccc;font-size:0.9em;margin-bottom:8px">Spillere scanner her</p>
           <div id="qrcode"></div>
-          <p style="font-size:0.75em;color:#888;margin-top:8px;">Scan for å delta</p>
+          <p class="small-label">Scan for å delta</p>
         </div>
-        <div class="players-panel">
-          <h3>👥 Deltakere (<span id="player-count">0</span>)</h3>
-          <div id="player-list"></div>
+        <div class="card" style="margin-top:15px">
+          <p style="color:#f093fb;margin-bottom:8px">👥 Deltakere (<span id="h-count">0</span>)</p>
+          <div class="player-chips" id="h-chips"></div>
         </div>
       </div>
-      <div class="lobby-screen">
-        <h2>Klar til å starte?</h2>
-        <p>La alle scanne QR-koden og registrere seg</p>
-        <div class="player-count" id="lobby-count">0</div>
+      <div class="card lobby-center">
+        <h2 style="font-size:1.8em">Klar til å starte?</h2>
+        <p style="color:#aaa">La alle scanne og registrere seg</p>
+        <div class="big-num" id="h-big-count">0</div>
         <p style="color:#aaa">deltakere inne</p>
         <br>
-        <button class="start-btn-big" onclick="startGame()" id="start-btn">🚀 Start leken!</button>
+        <button class="btn-big" onclick="startGame()">🚀 Start leken!</button>
       </div>
     </div>
   </div>
 
-  <!-- QUESTION HOST -->
-  <div id="host-question" style="display:none">
-    <div class="host-grid">
+  <div id="h-question" style="display:none">
+    <div class="grid2">
       <div>
-        <div class="qr-panel">
+        <div class="card" style="text-align:center">
           <div id="qrcode2"></div>
-          <p style="font-size:0.75em;color:#888;margin-top:8px;">Scan for å delta</p>
+          <p class="small-label">Scan for å delta</p>
         </div>
-        <div class="players-panel">
-          <h3>👥 Deltakere</h3>
-          <div id="player-list2"></div>
+        <div class="card" style="margin-top:15px">
+          <p style="color:#f093fb;margin-bottom:8px">👥 Deltakere</p>
+          <div class="player-chips" id="h-chips2"></div>
         </div>
       </div>
-      <div class="control-panel">
-        <div class="question-card">
-          <h3>Spørsmål <span id="q-num">1</span> av 10</h3>
-          <div class="question-text" id="host-q-text"></div>
-          <div class="results-bars" id="host-results"></div>
-          <div class="vote-progress" id="vote-progress"></div>
-          <div class="comments-box">
-            <h4>💬 Kommentarer</h4>
-            <div id="host-comments"></div>
-          </div>
-        </div>
+      <div class="card">
+        <div class="section-title">Spørsmål <span id="h-qnum">1</span> av 10</div>
+        <div class="q-text" id="h-qtext"></div>
+        <div class="bars" id="h-bars"></div>
+        <div class="progress-txt" id="h-progress"></div>
+        <div class="comments"><h4>💬 Kommentarer</h4><div id="h-comments"></div></div>
         <div class="btn-row">
-          <button class="btn btn-secondary" onclick="prevQuestion()" id="prev-btn">← Forrige</button>
-          <button class="btn btn-primary" onclick="nextQuestion()" id="next-btn">Neste →</button>
-          <button class="btn btn-success" onclick="showFinal()" id="final-btn" style="display:none">🏆 Vis vinner!</button>
+          <button class="btn btn-secondary" onclick="prevQ()" id="btn-prev">← Forrige</button>
+          <button class="btn btn-primary" onclick="nextQ()" id="btn-next">Neste →</button>
+          <button class="btn btn-success" onclick="showFinal()" id="btn-final" style="display:none">🏆 Vis vinner!</button>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- FINAL HOST -->
-  <div id="host-final" style="display:none">
-    <div style="text-align:center;margin-bottom:30px">
+  <div id="h-final" style="display:none">
+    <div style="text-align:center;margin-bottom:25px">
       <h2 style="font-size:2.5em;background:linear-gradient(90deg,#fda085,#f6d365);-webkit-background-clip:text;-webkit-text-fill-color:transparent">🏆 Resultater!</h2>
       <p style="color:#aaa">Hvem stemte mest med flertallet?</p>
     </div>
-    <div class="scoreboard" id="final-scoreboard"></div>
+    <div class="card" id="h-scoreboard"></div>
   </div>
 </div>
 
-<!-- PLAYER APP -->
+<!-- PLAYER -->
 <div id="player-app">
-  <div class="player-header">
-    <h1>🔮 Spå AI-fremtiden</h1>
-  </div>
+  <div class="p-header"><h1>🔮 Spå AI-fremtiden</h1></div>
 
-  <!-- Register -->
-  <div id="player-register">
-    <div class="input-card">
-      <label>Ditt navn</label>
-      <input type="text" id="player-name" placeholder="Skriv inn navnet ditt..." />
-      <br><br>
-      <label>Din rolle</label>
-      <select id="player-role">
-        <option value="">Velg rolle...</option>
-        <option>ERP-konsulent</option>
-        <option>Prosjektleder</option>
-        <option>Utvikler</option>
-        <option>Salg / Marked</option>
-        <option>Leder</option>
-        <option>Support / Drift</option>
-        <option>Annet</option>
-      </select>
-      <br><br>
+  <div id="p-register">
+    <div class="card">
+      <div class="field"><label>Ditt navn</label><input id="p-name" type="text" placeholder="Skriv inn navnet ditt..." /></div>
+      <div class="field"><label>Din rolle</label>
+        <select id="p-role">
+          <option value="">Velg rolle...</option>
+          <option>ERP-konsulent</option><option>Prosjektleder</option><option>Utvikler</option>
+          <option>Salg / Marked</option><option>Leder</option><option>Support / Drift</option><option>Annet</option>
+        </select>
+      </div>
       <button class="submit-btn" onclick="registerPlayer()">✅ Bli med i leken!</button>
     </div>
   </div>
 
-  <!-- Waiting -->
-  <div id="player-waiting" style="display:none">
-    <div class="waiting-screen">
-      <div class="pulse">⏳</div>
-      <h2>Du er med!</h2>
-      <p>Venter på at verten starter spillet...</p>
-      <br>
-      <div class="status-badge" id="registered-name"></div>
+  <div id="p-waiting" style="display:none">
+    <div class="waiting">
+      <span class="pulse">⏳</span>
+      <h2 style="margin:20px 0 10px">Du er med!</h2>
+      <p style="color:#aaa">Venter på at verten starter...</p>
+      <br><span id="p-badge" style="background:rgba(74,222,128,0.2);border:1px solid rgba(74,222,128,0.4);color:#4ade80;padding:4px 14px;border-radius:20px;font-size:0.9em"></span>
     </div>
   </div>
 
-  <!-- Question -->
-  <div id="player-question" style="display:none">
-    <div class="question-player">
-      <div class="q-number" id="p-q-num">Spørsmål 1 av 10</div>
-      <div class="q-text" id="p-q-text"></div>
-      <div id="p-options"></div>
-      <div class="comment-area" id="p-comment-area" style="display:none">
-        <textarea id="p-comment" placeholder="Legg til en kommentar (valgfritt)..." rows="2"></textarea>
-        <button class="submit-btn" id="p-submit-btn" onclick="submitAnswer()">📤 Send svar</button>
+  <div id="p-question" style="display:none">
+    <div class="card">
+      <div class="section-title" id="p-qnum">Spørsmål 1 av 10</div>
+      <div class="q-text" id="p-qtext"></div>
+      <div id="p-opts"></div>
+      <div id="p-comment-wrap" style="display:none">
+        <textarea id="p-comment" placeholder="Legg til kommentar (valgfritt)..." rows="2"></textarea>
+        <button class="submit-btn" onclick="submitAnswer()">📤 Send svar</button>
       </div>
     </div>
   </div>
 
-  <!-- Voted -->
-  <div id="player-voted" style="display:none">
-    <div class="voted-screen">
+  <div id="p-voted" style="display:none">
+    <div class="voted">
       <div style="font-size:3em">✅</div>
-      <h2>Svaret er registrert!</h2>
-      <p>Venter på neste spørsmål...</p>
+      <h2 style="margin:15px 0 8px">Svaret er registrert!</h2>
+      <p style="color:#aaa">Venter på neste spørsmål...</p>
     </div>
   </div>
 
-  <!-- Final Player -->
-  <div id="player-final" style="display:none">
-    <div class="final-score-player">
-      <h2>🏆 Spillet er ferdig!</h2>
-      <div class="my-score">Du stemte med flertallet <span id="my-score-num">0</span> ganger</div>
-      <p style="color:#aaa;margin-bottom:20px">av 10 spørsmål</p>
-      <div id="player-scoreboard"></div>
+  <div id="p-final" style="display:none">
+    <div class="card" style="text-align:center">
+      <h2 style="font-size:2em;margin-bottom:15px">🏆 Ferdig!</h2>
+      <p style="font-size:1.1em">Du stemte med flertallet</p>
+      <div style="font-size:3em;color:#f093fb;font-weight:bold;margin:10px 0" id="p-myscore">0</div>
+      <p style="color:#aaa;margin-bottom:20px">ganger av 10</p>
+      <div id="p-scoreboard"></div>
     </div>
   </div>
 </div>
 
 <script type="module">
-  // Wait for firebase
-  window.addEventListener('firebase-ready', init);
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, set, onValue, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
-  let myPlayerId = null;
-  let myName = '';
-  let selectedOption = null;
-  let currentQ = 0;
-  let gameState = null;
-  let listenersAttached = false;
+const FIREBASE = {
+  apiKey: "AIzaSyBLdfpZ_WyCB64KbZ2eaEqKfC6XXF0Km7U",
+  authDomain: "vivicta-ai-game.firebaseapp.com",
+  databaseURL: "https://vivicta-ai-game-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "vivicta-ai-game",
+  storageBucket: "vivicta-ai-game.firebasestorage.app",
+  messagingSenderId: "773671473181",
+  appId: "1:773671473181:web:24e0c0209e0fae9afb36f4"
+};
 
-  function init() {
-    const { isPlayer, dbRef, onValue, QUESTIONS } = window;
+const QUESTIONS = [
+  { q: "Vil AI om 2 år kunne erstatte en erfaren ERP-konsulent på et standard D365-prosjekt?", opts: ["Ja, 100%", "Delvis – de enkle tingene", "Nei, ikke uten mennesker"] },
+  { q: "Kan AI om 2 år gjennomføre en komplett periodestenging i D365 uten menneskelig innblanding?", opts: ["Ja, fullt automatisk", "Nesten – trenger litt hjelp", "Nei, for komplekst"] },
+  { q: "Vil AI om 2 år kunne skrive og teste egendefinert X++ kode i D365 FO?", opts: ["Ja, bedre enn oss", "Ja, men vi må kvalitetssikre", "Nei, trenger utviklere"] },
+  { q: "Hvor mye av Vivictas tjenestekatalog vil AI kunne levere automatisk om 2 år?", opts: ["Over 50%", "20–50%", "Under 20%"] },
+  { q: "Vil AI-agenter om 2 år kjøre kundestøtte for D365 uten at kunden merker det?", opts: ["Ja, usynlig AI", "Delvis – AI + menneske", "Nei, kunder vil merke det"] },
+  { q: "Hva skjer med antall ERP-konsulenter i Norden om 2 år?", opts: ["Færre – AI tar over", "Omtrent samme antall", "Flere – etterspørselen øker"] },
+  { q: "Vil AI om 2 år klare å lede en kundeWorkshop og samle krav alene?", opts: ["Ja, bedre enn mange", "Kanskje med fasilitator", "Nei, trenger ekte mennesker"] },
+  { q: "Vil AI om 2 år klare å lage en komplett tilbudsrespons for et D365-anbud?", opts: ["Ja, komplett", "Ja, men vi finjusterer", "Nei, for strategisk"] },
+  { q: "Hva vil være den største utfordringen med AI i ERP om 2 år?", opts: ["Tillit og godkjenning", "Teknisk modenhet", "Kunder er ikke klare"] },
+  { q: "Hvem i rommet tror du bruker AI mest aktivt i jobben sin om 2 år?", opts: ["Konsulentene", "Salg og marked", "Leder og strategi"] }
+];
 
-    if (isPlayer) {
-      document.getElementById('player-app').style.display = 'block';
-      startPlayerListening();
-    } else {
-      document.getElementById('host-app').style.display = 'block';
-      setupQR();
-      startHostListening();
+const app = initializeApp(FIREBASE);
+const db = getDatabase(app);
+const G = 'game1';
+const r = (path) => ref(db, G + (path ? '/' + path : ''));
+
+const isPlayer = new URLSearchParams(window.location.search).has('join');
+let myId = null, myName = '', selectedOpt = null, gameState = null;
+
+// Show correct app
+document.getElementById(isPlayer ? 'player-app' : 'host-app').style.display = 'block';
+if (!isPlayer) setupQR();
+
+// Listen to Firebase
+onValue(r(), snap => {
+  gameState = snap.val() || {};
+  isPlayer ? renderPlayer() : renderHost();
+});
+
+// ---- QR ----
+function setupQR() {
+  const url = window.location.href.split('?')[0] + '?join=1';
+  const qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&bgcolor=ffffff&color=0f0c29&data=' + encodeURIComponent(url);
+  ['qrcode','qrcode2'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = '<img src="' + qrUrl + '" width="200" height="200" style="border-radius:8px" />';
+  });
+}
+
+// ---- HOST RENDER ----
+function renderHost() {
+  const phase = gameState.phase || 'lobby';
+  const players = Object.values(gameState.players || {});
+
+  renderChips(players, 'h-chips');
+  renderChips(players, 'h-chips2');
+  document.getElementById('h-count').textContent = players.length;
+  document.getElementById('h-big-count').textContent = players.length;
+
+  document.getElementById('h-lobby').style.display = phase === 'lobby' ? 'block' : 'none';
+  document.getElementById('h-question').style.display = phase === 'question' ? 'block' : 'none';
+  document.getElementById('h-final').style.display = phase === 'final' ? 'block' : 'none';
+
+  if (phase === 'question') renderHostQ(gameState.currentQ || 0, players);
+  if (phase === 'final') renderScoreboard(players, 'h-scoreboard');
+}
+
+function renderChips(players, id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.innerHTML = players.length ? players.map(p => `<div class="chip">${p.name}</div>`).join('') : '<span style="color:#666;font-size:0.85em">Ingen ennå...</span>';
+}
+
+function renderHostQ(qi, players) {
+  const q = QUESTIONS[qi];
+  document.getElementById('h-qnum').textContent = qi + 1;
+  document.getElementById('h-qtext').textContent = q.q;
+
+  const votes = [0,0,0]; let voted = 0; const comments = [];
+  players.forEach(p => {
+    const a = p.answers?.[qi];
+    if (a != null) {
+      const opt = typeof a === 'object' ? a.option : a;
+      if (opt != null) votes[opt]++;
+      if (typeof a === 'object' && a.comment) comments.push({name: p.name, c: a.comment});
+      voted++;
     }
-  }
+  });
 
-  function setupQR() {
-    const url = window.location.href.split('?')[0] + '?join=1';
-    const qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&bgcolor=ffffff&color=0f0c29&data=' + encodeURIComponent(url);
-    ['qrcode','qrcode2'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) {
-        el.innerHTML = '<img src="' + qrUrl + '" width="200" height="200" style="border-radius:8px" />';
-      }
-    });
-  }
+  const total = players.length;
+  const colors = ['bar-a','bar-b','bar-c'];
+  document.getElementById('h-bars').innerHTML = q.opts.map((opt, i) => {
+    const pct = total > 0 ? Math.round(votes[i]/total*100) : 0;
+    return `<div class="bar-row">
+      <div class="bar-lbl">${opt}</div>
+      <div class="bar-bg"><div class="bar-fill ${colors[i]}" style="width:${pct}%">${pct > 12 ? pct+'%' : ''}</div></div>
+      <div class="bar-cnt">${votes[i]} stemmer</div>
+    </div>`;
+  }).join('');
 
-  // ---- HOST ----
-  function startHostListening() {
-    const { dbRef, onValue } = window;
-    onValue(dbRef(''), (snap) => {
-      gameState = snap.val() || {};
-      renderHost();
-    });
-  }
+  document.getElementById('h-progress').textContent = `${voted} av ${total} har stemt`;
+  document.getElementById('h-comments').innerHTML = comments.length
+    ? comments.map(c => `<div class="comment"><strong>${c.name}:</strong> ${c.c}</div>`).join('')
+    : '<p style="color:#555;font-size:0.85em">Ingen kommentarer ennå</p>';
 
-  function renderHost() {
-    if (!gameState) return;
-    const phase = gameState.phase || 'lobby';
-    const players = gameState.players || {};
-    const playerList = Object.values(players);
+  document.getElementById('btn-prev').disabled = qi === 0;
+  document.getElementById('btn-next').style.display = qi < 9 ? 'inline-block' : 'none';
+  document.getElementById('btn-final').style.display = qi === 9 ? 'inline-block' : 'none';
+}
 
-    // Update player lists
-    renderPlayerList(playerList, 'player-list');
-    renderPlayerList(playerList, 'player-list2');
-    document.getElementById('player-count').textContent = playerList.length;
-    document.getElementById('lobby-count').textContent = playerList.length;
-
-    if (phase === 'lobby') {
-      document.getElementById('host-lobby').style.display = 'block';
-      document.getElementById('host-question').style.display = 'none';
-      document.getElementById('host-final').style.display = 'none';
-    } else if (phase === 'question') {
-      const qIdx = gameState.currentQuestion || 0;
-      document.getElementById('host-lobby').style.display = 'none';
-      document.getElementById('host-question').style.display = 'block';
-      document.getElementById('host-final').style.display = 'none';
-      renderHostQuestion(qIdx, players);
-    } else if (phase === 'final') {
-      document.getElementById('host-lobby').style.display = 'none';
-      document.getElementById('host-question').style.display = 'none';
-      document.getElementById('host-final').style.display = 'block';
-      renderFinalScoreboard(players);
-    }
-  }
-
-  function renderPlayerList(players, containerId) {
-    const el = document.getElementById(containerId);
-    if (!el) return;
-    if (!players.length) { el.innerHTML = '<p style="color:#666;font-size:0.85em">Ingen ennå...</p>'; return; }
-    el.innerHTML = players.map(p =>
-      `<div class="player-chip"><div class="dot"></div>${p.name} <span style="color:#888;font-size:0.8em">${p.role || ''}</span></div>`
-    ).join('');
-  }
-
-  function renderHostQuestion(qIdx, players) {
-    const q = window.QUESTIONS[qIdx];
-    document.getElementById('q-num').textContent = qIdx + 1;
-    document.getElementById('host-q-text').textContent = q.q;
-
-    // Tally votes
-    const votes = {0:0, 1:0, 2:0};
-    const total = Object.keys(players).length;
-    let voted = 0;
-    const comments = [];
-
-    Object.values(players).forEach(p => {
-      const ans = p.answers?.[qIdx];
-      if (ans !== undefined && ans !== null) {
-        const opt = typeof ans === 'object' ? ans.option : ans;
-        if (opt !== undefined) votes[opt] = (votes[opt] || 0) + 1;
-        if (typeof ans === 'object' && ans.comment) comments.push({name: p.name, comment: ans.comment});
-        voted++;
-      }
-    });
-
-    // Bars
-    const colors = ['a','b','c'];
-    const barsHtml = q.options.map((opt, i) => {
-      const pct = total > 0 ? Math.round((votes[i]||0) / total * 100) : 0;
-      return `<div class="result-bar-wrap">
-        <div class="result-label">${opt}</div>
-        <div class="result-bar-bg"><div class="result-bar ${colors[i]}" style="width:${pct}%">${pct > 10 ? pct+'%' : ''}</div></div>
-        <div class="result-count">${votes[i]||0} stemmer</div>
-      </div>`;
-    }).join('');
-    document.getElementById('host-results').innerHTML = barsHtml;
-
-    document.getElementById('vote-progress').textContent = `${voted} av ${total} har stemt`;
-
-    // Comments
-    const commentsHtml = comments.length
-      ? comments.map(c => `<div class="comment-item"><strong>${c.name}:</strong> ${c.comment}</div>`).join('')
-      : '<p style="color:#555;font-size:0.85em">Ingen kommentarer ennå</p>';
-    document.getElementById('host-comments').innerHTML = commentsHtml;
-
-    // Buttons
-    const prevBtn = document.getElementById('prev-btn');
-    const nextBtn = document.getElementById('next-btn');
-    const finalBtn = document.getElementById('final-btn');
-    prevBtn.disabled = qIdx === 0;
-    if (qIdx === 9) {
-      nextBtn.style.display = 'none';
-      finalBtn.style.display = 'inline-block';
-    } else {
-      nextBtn.style.display = 'inline-block';
-      finalBtn.style.display = 'none';
-    }
-  }
-
-  function renderFinalScoreboard(players) {
-    const playerList = Object.values(players);
-    const scores = playerList.map(p => {
-      let score = 0;
-      window.QUESTIONS.forEach((q, qi) => {
-        // Find majority
-        const votes = {0:0,1:0,2:0};
-        playerList.forEach(pl => {
-          const ans = pl.answers?.[qi];
-          if (ans !== undefined && ans !== null) {
-            const opt = typeof ans === 'object' ? ans.option : ans;
-            if (opt !== undefined) votes[opt] = (votes[opt]||0)+1;
-          }
-        });
-        const majority = parseInt(Object.entries(votes).sort((a,b)=>b[1]-a[1])[0][0]);
-        const myAns = p.answers?.[qi];
-        const myOpt = myAns !== undefined ? (typeof myAns === 'object' ? myAns.option : myAns) : undefined;
-        if (myOpt === majority && votes[majority] > 0) score++;
+function renderScoreboard(players, containerId) {
+  const scores = players.map(p => {
+    let score = 0;
+    QUESTIONS.forEach((q, qi) => {
+      const votes = [0,0,0];
+      players.forEach(pl => {
+        const a = pl.answers?.[qi];
+        if (a != null) { const opt = typeof a === 'object' ? a.option : a; if (opt != null) votes[opt]++; }
       });
-      return { name: p.name, role: p.role, score };
-    }).sort((a,b) => b.score - a.score);
-
-    const medals = ['🥇','🥈','🥉'];
-    const classes = ['first','second','third'];
-    document.getElementById('final-scoreboard').innerHTML = scores.map((s, i) => `
-      <div class="score-item ${classes[i] || ''}">
-        <span class="score-rank">${medals[i] || (i+1)+'.'}  </span>
-        <span class="score-name">${s.name} <span style="color:#888;font-size:0.85em">${s.role||''}</span></span>
-        <span class="score-pts">${s.score}/10 ✓</span>
-      </div>
-    `).join('');
-  }
-
-  // ---- HOST CONTROLS ----
-  window.startGame = async function() {
-    const { dbRef, dbUpdate } = window;
-    await dbUpdate(dbRef(''), { phase: 'question', currentQuestion: 0 });
-  };
-
-  window.nextQuestion = async function() {
-    const { dbRef, dbUpdate } = window;
-    const cur = gameState?.currentQuestion || 0;
-    if (cur < 9) await dbUpdate(dbRef(''), { currentQuestion: cur + 1 });
-  };
-
-  window.prevQuestion = async function() {
-    const { dbRef, dbUpdate } = window;
-    const cur = gameState?.currentQuestion || 0;
-    if (cur > 0) await dbUpdate(dbRef(''), { currentQuestion: cur - 1 });
-  };
-
-  window.showFinal = async function() {
-    const { dbRef, dbUpdate } = window;
-    await dbUpdate(dbRef(''), { phase: 'final' });
-  };
-
-  window.resetGame = async function() {
-    if (!confirm('Sikker? Dette sletter alle spillere og svar.')) return;
-    const { dbRef, dbSet } = window;
-    await dbSet(dbRef(''), null);
-  };
-
-  // ---- PLAYER ----
-  function startPlayerListening() {
-    const { dbRef, onValue } = window;
-    onValue(dbRef(''), (snap) => {
-      gameState = snap.val() || {};
-      if (myPlayerId) renderPlayer();
+      const maj = votes.indexOf(Math.max(...votes));
+      const a = p.answers?.[qi];
+      const opt = a != null ? (typeof a === 'object' ? a.option : a) : null;
+      if (opt === maj && votes[maj] > 0) score++;
     });
-  }
+    return { name: p.name, role: p.role || '', score };
+  }).sort((a,b) => b.score - a.score);
 
-  window.registerPlayer = async function() {
-    const name = document.getElementById('player-name').value.trim();
-    const role = document.getElementById('player-role').value;
-    if (!name) { alert('Skriv inn navnet ditt!'); return; }
+  const medals = ['🥇','🥈','🥉'];
+  const cls = ['s1','s2','s3'];
+  document.getElementById(containerId).innerHTML = scores.map((s,i) =>
+    `<div class="score-item ${cls[i]||''}">
+      <span class="score-rank">${medals[i]||i+1+'.'}</span>
+      <span class="score-name">${s.name} <span style="color:#888;font-size:0.85em">${s.role}</span></span>
+      <span class="score-pts">${s.score}/10 ✓</span>
+    </div>`
+  ).join('');
+}
 
-    const { dbRef, dbSet } = window;
-    myPlayerId = 'p_' + Date.now() + '_' + Math.random().toString(36).substr(2,5);
-    myName = name;
+// ---- HOST CONTROLS ----
+window.startGame = () => update(r(), { phase: 'question', currentQ: 0 });
+window.nextQ = () => { const q = gameState?.currentQ||0; if(q<9) update(r(), { currentQ: q+1 }); };
+window.prevQ = () => { const q = gameState?.currentQ||0; if(q>0) update(r(), { currentQ: q-1 }); };
+window.showFinal = () => update(r(), { phase: 'final' });
+window.resetGame = () => { if(confirm('Sikker? Sletter alle spillere og svar.')) set(r(), null); };
 
-    await dbSet(dbRef(`players/${myPlayerId}`), { name, role, answers: {} });
-    document.getElementById('registered-name').textContent = '✓ ' + name;
-    document.getElementById('player-register').style.display = 'none';
-    document.getElementById('player-waiting').style.display = 'block';
-    renderPlayer();
-  };
+// ---- PLAYER RENDER ----
+function renderPlayer() {
+  if (!myId) return;
+  const phase = gameState.phase || 'lobby';
+  const show = (id) => ['p-register','p-waiting','p-question','p-voted','p-final'].forEach(i => document.getElementById(i).style.display = i===id?'block':'none');
 
-  function renderPlayer() {
-    if (!gameState || !myPlayerId) return;
-    const phase = gameState.phase || 'lobby';
+  if (phase === 'lobby') { show('p-waiting'); return; }
+  if (phase === 'final') { show('p-final'); renderPlayerFinal(); return; }
 
-    if (phase === 'lobby') {
-      document.getElementById('player-register').style.display = 'none';
-      document.getElementById('player-waiting').style.display = 'block';
-      document.getElementById('player-question').style.display = 'none';
-      document.getElementById('player-voted').style.display = 'none';
-      document.getElementById('player-final').style.display = 'none';
-    } else if (phase === 'question') {
-      const qIdx = gameState.currentQuestion || 0;
-      const myPlayer = gameState.players?.[myPlayerId];
-      const hasAnswered = myPlayer?.answers?.[qIdx] !== undefined;
+  const qi = gameState.currentQ || 0;
+  const myPlayer = gameState.players?.[myId];
+  const answered = myPlayer?.answers?.[qi] != null;
 
-      document.getElementById('player-waiting').style.display = 'none';
-      document.getElementById('player-final').style.display = 'none';
+  if (answered) { show('p-voted'); }
+  else { show('p-question'); renderPlayerQ(qi); }
+}
 
-      if (hasAnswered) {
-        document.getElementById('player-question').style.display = 'none';
-        document.getElementById('player-voted').style.display = 'block';
-      } else {
-        document.getElementById('player-voted').style.display = 'none';
-        document.getElementById('player-question').style.display = 'block';
-        renderPlayerQuestion(qIdx);
-      }
-    } else if (phase === 'final') {
-      document.getElementById('player-waiting').style.display = 'none';
-      document.getElementById('player-question').style.display = 'none';
-      document.getElementById('player-voted').style.display = 'none';
-      document.getElementById('player-final').style.display = 'block';
-      renderPlayerFinal();
-    }
-  }
+function renderPlayerQ(qi) {
+  const q = QUESTIONS[qi];
+  document.getElementById('p-qnum').textContent = `Spørsmål ${qi+1} av 10`;
+  document.getElementById('p-qtext').textContent = q.q;
+  selectedOpt = null;
+  document.getElementById('p-comment-wrap').style.display = 'none';
+  document.getElementById('p-comment').value = '';
+  document.getElementById('p-opts').innerHTML = q.opts.map((opt,i) =>
+    `<button class="opt-btn" onclick="selectOpt(${i},this)">${['A','B','C'][i]}. ${opt}</button>`
+  ).join('');
+}
 
-  function renderPlayerQuestion(qIdx) {
-    const q = window.QUESTIONS[qIdx];
-    document.getElementById('p-q-num').textContent = `Spørsmål ${qIdx+1} av 10`;
-    document.getElementById('p-q-text').textContent = q.q;
-    selectedOption = null;
-    document.getElementById('p-comment-area').style.display = 'none';
-    document.getElementById('p-comment').value = '';
+window.selectOpt = function(idx, btn) {
+  selectedOpt = idx;
+  document.querySelectorAll('.opt-btn').forEach(b => b.classList.remove('sel'));
+  btn.classList.add('sel');
+  document.getElementById('p-comment-wrap').style.display = 'block';
+};
 
-    document.getElementById('p-options').innerHTML = q.options.map((opt, i) =>
-      `<button class="option-btn" onclick="selectOption(${i}, this)">${['A','B','C'][i]}. ${opt}</button>`
-    ).join('');
-  }
+window.submitAnswer = async function() {
+  if (selectedOpt === null) { alert('Velg et alternativ!'); return; }
+  const qi = gameState?.currentQ || 0;
+  const comment = document.getElementById('p-comment').value.trim();
+  await set(ref(db, `${G}/players/${myId}/answers/${qi}`), { option: selectedOpt, comment: comment || null });
+};
 
-  window.selectOption = function(idx, btn) {
-    selectedOption = idx;
-    document.querySelectorAll('.option-btn').forEach(b => b.classList.remove('selected'));
-    btn.classList.add('selected');
-    document.getElementById('p-comment-area').style.display = 'block';
-  };
+function renderPlayerFinal() {
+  const players = Object.values(gameState.players || {});
+  const myPlayer = gameState.players?.[myId];
+  let myScore = 0;
+  QUESTIONS.forEach((q, qi) => {
+    const votes = [0,0,0];
+    players.forEach(p => { const a = p.answers?.[qi]; if(a!=null){const opt=typeof a==='object'?a.option:a;if(opt!=null)votes[opt]++;} });
+    const maj = votes.indexOf(Math.max(...votes));
+    const a = myPlayer?.answers?.[qi];
+    const opt = a!=null?(typeof a==='object'?a.option:a):null;
+    if(opt===maj && votes[maj]>0) myScore++;
+  });
+  document.getElementById('p-myscore').textContent = myScore;
 
-  window.submitAnswer = async function() {
-    if (selectedOption === null) { alert('Velg et alternativ!'); return; }
-    const { dbRef, dbSet } = window;
-    const qIdx = gameState.currentQuestion || 0;
-    const comment = document.getElementById('p-comment').value.trim();
-
-    await dbSet(dbRef(`players/${myPlayerId}/answers/${qIdx}`), {
-      option: selectedOption,
-      comment: comment || null
+  const scores = players.map(p => {
+    let score = 0;
+    QUESTIONS.forEach((q, qi) => {
+      const votes = [0,0,0];
+      players.forEach(pl => { const a=pl.answers?.[qi]; if(a!=null){const opt=typeof a==='object'?a.option:a;if(opt!=null)votes[opt]++;} });
+      const maj = votes.indexOf(Math.max(...votes));
+      const a = p.answers?.[qi];
+      const opt = a!=null?(typeof a==='object'?a.option:a):null;
+      if(opt===maj && votes[maj]>0) score++;
     });
+    return { name: p.name, score };
+  }).sort((a,b)=>b.score-a.score);
 
-    document.getElementById('player-question').style.display = 'none';
-    document.getElementById('player-voted').style.display = 'block';
-  };
+  const medals=['🥇','🥈','🥉']; const cls=['s1','s2','s3'];
+  document.getElementById('p-scoreboard').innerHTML = '<h3 style="color:#f093fb;margin-bottom:12px">Poengtavle</h3>' +
+    scores.map((s,i)=>`<div class="score-item ${cls[i]||''}"><span class="score-rank">${medals[i]||i+1+'.'}</span><span class="score-name">${s.name}</span><span class="score-pts">${s.score}/10</span></div>`).join('');
+}
 
-  function renderPlayerFinal() {
-    const players = Object.values(gameState.players || {});
-    const myPlayer = gameState.players?.[myPlayerId];
-    let myScore = 0;
-
-    window.QUESTIONS.forEach((q, qi) => {
-      const votes = {0:0,1:0,2:0};
-      players.forEach(p => {
-        const ans = p.answers?.[qi];
-        if (ans !== undefined && ans !== null) {
-          const opt = typeof ans === 'object' ? ans.option : ans;
-          if (opt !== undefined) votes[opt] = (votes[opt]||0)+1;
-        }
-      });
-      const majority = parseInt(Object.entries(votes).sort((a,b)=>b[1]-a[1])[0][0]);
-      const myAns = myPlayer?.answers?.[qi];
-      const myOpt = myAns !== undefined ? (typeof myAns === 'object' ? myAns.option : myAns) : undefined;
-      if (myOpt === majority && votes[majority] > 0) myScore++;
-    });
-
-    document.getElementById('my-score-num').textContent = myScore;
-
-    const scores = players.map(p => {
-      let score = 0;
-      window.QUESTIONS.forEach((q, qi) => {
-        const votes = {0:0,1:0,2:0};
-        players.forEach(pl => {
-          const ans = pl.answers?.[qi];
-          if (ans !== undefined && ans !== null) {
-            const opt = typeof ans === 'object' ? ans.option : ans;
-            if (opt !== undefined) votes[opt] = (votes[opt]||0)+1;
-          }
-        });
-        const majority = parseInt(Object.entries(votes).sort((a,b)=>b[1]-a[1])[0][0]);
-        const myAns = p.answers?.[qi];
-        const myOpt = myAns !== undefined ? (typeof myAns === 'object' ? myAns.option : myAns) : undefined;
-        if (myOpt === majority && votes[majority] > 0) score++;
-      });
-      return { name: p.name, score };
-    }).sort((a,b) => b.score - a.score);
-
-    const medals = ['🥇','🥈','🥉'];
-    document.getElementById('player-scoreboard').innerHTML = '<h3 style="margin-bottom:12px;color:#f093fb">Poengtavle</h3>' +
-      scores.map((s,i) => `<div class="score-item ${i<3?['first','second','third'][i]:''}">
-        <span class="score-rank">${medals[i]||i+1+'.'}</span>
-        <span class="score-name">${s.name}</span>
-        <span class="score-pts">${s.score}/10</span>
-      </div>`).join('');
-  }
+// ---- REGISTER ----
+window.registerPlayer = async function() {
+  const name = document.getElementById('p-name').value.trim();
+  const role = document.getElementById('p-role').value;
+  if (!name) { alert('Skriv inn navnet ditt!'); return; }
+  myId = 'p_' + Date.now() + '_' + Math.random().toString(36).substr(2,5);
+  myName = name;
+  document.getElementById('p-badge').textContent = '✓ ' + name;
+  await set(ref(db, `${G}/players/${myId}`), { name, role, answers: {} });
+  document.getElementById('p-register').style.display = 'none';
+  document.getElementById('p-waiting').style.display = 'block';
+};
 </script>
 </body>
 </html>
