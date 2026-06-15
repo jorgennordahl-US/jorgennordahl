@@ -21,6 +21,16 @@ export const experiments: Experiment[] = [
     url: '/ai-fremtid.html',
   },
   {
+    slug: 'nordhav-aquamonitor',
+    title: 'NordHav AquaMonitor',
+    description: 'Document hub for aquaculture monitoring — live data, reports and compliance in one place.',
+    status: 'active',
+    tags: ['aquaculture', 'documents', 'dashboard'],
+    featured: true,
+    date: '2026-06',
+    url: 'https://frsaetre.github.io/NordHav/index.html',
+  },
+  {
     slug: 'mcp-dynamics-365',
     title: 'MCP for Dynamics 365 FO',
     description: 'Exposing ERP functions to AI agents through Model Context Protocol.',
