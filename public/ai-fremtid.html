@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Spå AI-fremtiden 🔮</title>
-<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getDatabase, ref, set, get, onValue, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
@@ -487,11 +487,11 @@
 
   function setupQR() {
     const url = window.location.href.split('?')[0] + '?join=1';
+    const qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&bgcolor=ffffff&color=0f0c29&data=' + encodeURIComponent(url);
     ['qrcode','qrcode2'].forEach(id => {
       const el = document.getElementById(id);
       if (el) {
-        el.innerHTML = '';
-        new QRCode(el, { text: url, width: 200, height: 200, colorLight: '#ffffff', colorDark: '#0f0c29' });
+        el.innerHTML = '<img src="' + qrUrl + '" width="200" height="200" style="border-radius:8px" />';
       }
     });
   }
