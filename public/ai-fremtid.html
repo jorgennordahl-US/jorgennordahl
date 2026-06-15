@@ -455,87 +455,102 @@ const BODIES = [
   `<svg width="80" height="110" viewBox="0 0 80 110"><rect x="16" y="0" width="48" height="60" rx="6" fill="white"/><rect x="4" y="5" width="16" height="42" rx="7" fill="white"/><rect x="60" y="5" width="16" height="42" rx="7" fill="white"/><rect x="21" y="57" width="16" height="52" rx="7" fill="#0984e3"/><rect x="43" y="57" width="16" height="52" rx="7" fill="#0984e3"/><rect x="9" y="96" width="22" height="13" rx="5" fill="#2d3436"/><rect x="49" y="96" width="22" height="13" rx="5" fill="#2d3436"/><rect x="26" y="40" width="12" height="25" rx="4" fill="#74b9ff" opacity="0.8"/><circle cx="38" cy="63" r="5" fill="#55efc4"/><text x="55" y="20" font-size="16">🧪</text></svg>`
 ];
 
-function renderGroupPhoto(players) {
+async function renderGroupPhoto(players) {
   const canvas = document.getElementById("group-canvas");
   const ctx = canvas.getContext("2d");
   const n = players.length;
   if (n === 0) return;
-  
-  const cols = Math.ceil(Math.sqrt(n * 1.5));
+
+  const cols = Math.min(n, Math.ceil(Math.sqrt(n * 1.6)));
   const rows = Math.ceil(n / cols);
-  const cellW = 130, cellH = 200;
+  const cellW = 140, cellH = 210;
   canvas.width = cols * cellW + 40;
   canvas.height = rows * cellH + 80;
-  
+
   // Background
   const grad = ctx.createLinearGradient(0,0,canvas.width,canvas.height);
-  grad.addColorStop(0,"#002D1A");
-  grad.addColorStop(1,"#004A2C");
+  grad.addColorStop(0,"#001F12");
+  grad.addColorStop(1,"#003D24");
   ctx.fillStyle = grad;
   ctx.fillRect(0,0,canvas.width,canvas.height);
-  
+
   // Title
   ctx.fillStyle = "#41F0AA";
-  ctx.font = "bold 22px Segoe UI";
+  ctx.font = "bold 22px 'Segoe UI', sans-serif";
   ctx.textAlign = "center";
-  ctx.fillText("Vivicta-teamet 💚", canvas.width/2, 35);
-  
+  ctx.fillText("Vivicta-teamet 💚", canvas.width/2, 38);
+
+  // Helper: load image as promise
+  const loadImg = src => new Promise((res,rej) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => res(img);
+    img.onerror = () => res(null);
+    img.src = src;
+  });
+
+  // Helper: load SVG body as image
+  const loadBody = (svgStr) => {
+    const blob = new Blob([svgStr], {type:"image/svg+xml"});
+    const url = URL.createObjectURL(blob);
+    return loadImg(url).then(img => { URL.revokeObjectURL(url); return img; });
+  };
+
   const shuffled = [...players].sort(()=>Math.random()-0.5);
-  
-  shuffled.forEach((p, i) => {
+
+  // Load all bodies and head images in parallel
+  const assets = await Promise.all(shuffled.map(async (p, i) => {
+    const bodyImg = await loadBody(BODIES[i % BODIES.length]);
+    const headImg = p.photo ? await loadImg(p.photo) : null;
+    return { p, bodyImg, headImg };
+  }));
+
+  // Draw all
+  assets.forEach(({ p, bodyImg, headImg }, i) => {
     const col = i % cols;
     const row = Math.floor(i / cols);
     const x = 20 + col * cellW + cellW/2;
-    const y = 60 + row * cellH;
-    
-    // Draw body SVG
-    const bodyIdx = i % BODIES.length;
-    const bodyImg = new Image();
-    const svgBlob = new Blob([BODIES[bodyIdx]], {type:"image/svg+xml"});
-    const bodyUrl = URL.createObjectURL(svgBlob);
-    
-    bodyImg.onload = () => {
-      ctx.drawImage(bodyImg, x-40, y+58, 80, 110);
-      URL.revokeObjectURL(bodyUrl);
-      // Name
-      ctx.fillStyle = "#ffffff";
-      ctx.font = "bold 11px Segoe UI";
-      ctx.textAlign = "center";
-      ctx.fillText(p.name, x, y+180);
-      if (p.word) {
-        ctx.fillStyle = "#41F0AA";
-        ctx.font = "10px Segoe UI";
-        ctx.fillText('"'+p.word+'"', x, y+194);
-      }
-    };
-    bodyImg.src = bodyUrl;
-    
-    // Draw head photo
-    if (p.photo) {
-      const headImg = new Image();
-      headImg.onload = () => {
-        ctx.save();
-        ctx.beginPath();
-        ctx.arc(x, y+30, 36, 0, Math.PI*2);
-        ctx.clip();
-        ctx.drawImage(headImg, x-36, y-6, 72, 72);
-        ctx.restore();
-        // Circle border
-        ctx.beginPath();
-        ctx.arc(x, y+30, 36, 0, Math.PI*2);
-        ctx.strokeStyle = "#41F0AA";
-        ctx.lineWidth = 2.5;
-        ctx.stroke();
-      };
-      headImg.src = p.photo;
-    } else {
-      ctx.fillStyle = "rgba(65,240,170,0.15)";
+    const y = 58 + row * cellH;
+
+    // Draw body first
+    if (bodyImg) ctx.drawImage(bodyImg, x-42, y+52, 84, 116);
+
+    // Draw head on top
+    if (headImg) {
+      ctx.save();
       ctx.beginPath();
-      ctx.arc(x, y+30, 36, 0, Math.PI*2);
+      ctx.arc(x, y+32, 38, 0, Math.PI*2);
+      ctx.clip();
+      ctx.drawImage(headImg, x-38, y-6, 76, 76);
+      ctx.restore();
+      ctx.beginPath();
+      ctx.arc(x, y+32, 38, 0, Math.PI*2);
+      ctx.strokeStyle = "#41F0AA";
+      ctx.lineWidth = 3;
+      ctx.stroke();
+    } else {
+      ctx.fillStyle = "rgba(65,240,170,0.12)";
+      ctx.beginPath();
+      ctx.arc(x, y+32, 38, 0, Math.PI*2);
       ctx.fill();
-      ctx.font = "32px serif";
+      ctx.strokeStyle = "#41F0AA";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.font = "34px serif";
       ctx.textAlign = "center";
-      ctx.fillText("👤", x, y+45);
+      ctx.fillStyle = "white";
+      ctx.fillText("👤", x, y+46);
+    }
+
+    // Name
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "bold 11px 'Segoe UI', sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText(p.name, x, y+182);
+    if (p.word) {
+      ctx.fillStyle = "#41F0AA";
+      ctx.font = "10px 'Segoe UI', sans-serif";
+      ctx.fillText('"' + p.word + '"', x, y+196);
     }
   });
 }
