@@ -10,21 +10,24 @@ export default async function Home() {
   return (
     <div>
       {/* Hero */}
-      <section className="px-8 pt-20 pb-16 border-b border-neutral-100">
-        <p className="font-mono text-xs text-teal-600 uppercase tracking-widest mb-5">
-          // practical ai · erp · organizational transformation
-        </p>
-        <h1 className="font-mono text-5xl font-medium leading-tight text-neutral-900">
-          Jørgen Nordahl<br />
-          <span className="text-teal-600">AI Lab</span>
-        </h1>
-        <p className="mt-5 text-neutral-500 text-base leading-relaxed max-w-lg">
-          Practical experiments at the intersection of AI, ERP and organizational transformation.
-        </p>
-        <div className="flex gap-3 mt-8">
-          <Link href="/experiments" className="btn-primary">explore experiments →</Link>
-          <Link href="/articles" className="btn-ghost">read articles</Link>
+      <section className="relative px-8 pt-20 pb-16 border-b border-neutral-100 overflow-hidden min-h-[340px]">
+        <div className="relative z-10 max-w-lg">
+          <p className="font-mono text-xs text-teal-600 uppercase tracking-widest mb-5">
+            // practical ai · erp · organizational transformation
+          </p>
+          <h1 className="font-mono text-5xl font-medium leading-tight text-neutral-900">
+            Jørgen Nordahl<br />
+            <span className="text-teal-600">AI Lab</span>
+          </h1>
+          <p className="mt-5 text-neutral-500 text-base leading-relaxed max-w-lg">
+            Practical experiments at the intersection of AI, ERP and organizational transformation.
+          </p>
+          <div className="flex gap-3 mt-8">
+            <Link href="/experiments" className="btn-primary">explore experiments →</Link>
+            <Link href="/articles" className="btn-ghost">read articles</Link>
+          </div>
         </div>
+        <PacMan />
       </section>
 
       {/* Stats strip */}
