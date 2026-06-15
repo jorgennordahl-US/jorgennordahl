@@ -6,9 +6,20 @@ export type Experiment = {
   tags: string[]
   featured: boolean
   date: string
+  url?: string
 }
 
 export const experiments: Experiment[] = [
+  {
+    slug: 'ai-fremtid',
+    title: 'Spå AI-fremtiden',
+    description: 'Festlek for grupper — stem på hva AI klarer om 2 år. Med live-resultater og poengtavle.',
+    status: 'active',
+    tags: ['ai', 'workshop', 'demo'],
+    featured: true,
+    date: '2026-06',
+    url: '/ai-fremtid.html',
+  },
   {
     slug: 'mcp-dynamics-365',
     title: 'MCP for Dynamics 365 FO',
