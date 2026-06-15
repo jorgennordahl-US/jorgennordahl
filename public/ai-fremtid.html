@@ -6,525 +6,492 @@
 <title>Spå AI-fremtiden · Vivicta</title>
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --teal: #0F6E56; --teal-light: #E1F5EE; --teal-dark: #085041; --teal-mid: #1D9E75;
+  --amber: #BA7517; --amber-light: #FAEEDA;
+  --text: #1a1a1a; --muted: #6b6b6b; --border: rgba(0,0,0,0.1);
+  --bg: #ffffff; --surface: #f8f8f6;
+  --mono: 'JetBrains Mono', monospace;
+}
+html, body { min-height: 100vh; background: var(--bg); color: var(--text); font-family: 'Inter', system-ui, sans-serif; }
+.screen { display: none; min-height: 100vh; flex-direction: column; }
+.screen.active { display: flex; }
+.wrap { padding: 1.5rem; max-width: 720px; margin: 0 auto; width: 100%; }
+.wrap-narrow { padding: 1.5rem; max-width: 440px; margin: 0 auto; width: 100%; }
+.logo { font-family: var(--mono); font-size: 11px; color: var(--teal); letter-spacing: .1em; text-transform: uppercase; margin-bottom: 1rem; }
+h1 { font-size: 24px; font-weight: 500; margin-bottom: .5rem; }
+.sub { font-size: 14px; color: var(--muted); margin-bottom: 1.5rem; line-height: 1.6; }
+.label { font-family: var(--mono); font-size: 11px; color: var(--muted); letter-spacing: .1em; text-transform: uppercase; margin-bottom: .75rem; }
+.btn { padding: 12px 20px; border-radius: 12px; font-size: 14px; cursor: pointer; border: none; transition: all .15s; font-family: inherit; }
+.btn-primary { background: var(--teal); color: white; }
+.btn-primary:hover { background: var(--teal-dark); }
+.btn-primary:disabled { opacity: .4; cursor: default; }
+.btn-ghost { background: transparent; border: 0.5px solid var(--border); color: var(--muted); }
+.input { width: 100%; padding: 13px 16px; border: 1.5px solid var(--border); border-radius: 12px; font-size: 15px; background: var(--bg); color: var(--text); outline: none; font-family: inherit; }
+.input:focus { border-color: var(--teal); }
+.textarea { width: 100%; padding: 12px 16px; border: 1.5px solid var(--border); border-radius: 12px; font-size: 14px; background: var(--bg); color: var(--text); outline: none; font-family: inherit; resize: none; min-height: 80px; }
+.textarea:focus { border-color: var(--teal); }
 
-  :root {
-    --teal: #0F6E56;
-    --teal-light: #E1F5EE;
-    --teal-mid: #1D9E75;
-    --teal-dark: #085041;
-    --amber: #BA7517;
-    --amber-light: #FAEEDA;
-    --text: #1a1a1a;
-    --text-muted: #6b6b6b;
-    --border: rgba(0,0,0,0.1);
-    --bg: #ffffff;
-    --surface: #f8f8f6;
-    --mono: 'JetBrains Mono', 'Fira Code', monospace;
-  }
+/* QR BOX */
+.qr-box { background: var(--surface); border: 0.5px solid var(--border); border-radius: 16px; padding: 1.5rem; display: flex; gap: 1.5rem; align-items: center; margin-bottom: 1.5rem; }
+.qr-wrap { background: white; padding: 10px; border-radius: 12px; border: 0.5px solid var(--border); flex-shrink: 0; }
+.qr-info h2 { font-size: 15px; font-weight: 500; margin-bottom: 6px; }
+.qr-info p { font-size: 13px; color: var(--muted); line-height: 1.6; }
+.qr-url { font-family: var(--mono); font-size: 11px; color: var(--teal); margin-top: 8px; word-break: break-all; }
 
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap');
+/* PLAYERS GRID */
+.players-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; margin-bottom: 1.5rem; min-height: 56px; }
+.player-chip { background: var(--teal-light); border-radius: 10px; padding: 8px 12px; display: flex; align-items: center; gap: 8px; }
+.avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--teal); color: white; font-size: 11px; font-weight: 500; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.avatar-lg { width: 60px; height: 60px; font-size: 20px; }
 
-  html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'Inter', system-ui, sans-serif; }
+/* PROGRESS */
+.progress-wrap { height: 6px; background: var(--surface); border-radius: 99px; margin-bottom: 1.5rem; overflow: hidden; }
+.progress-fill { height: 100%; background: var(--teal); border-radius: 99px; transition: width .4s; }
+.dots { display: flex; gap: 4px; margin-bottom: 1.5rem; }
+.dot { flex: 1; height: 4px; border-radius: 99px; background: var(--border); }
+.dot.done { background: var(--teal); }
+.dot.active { background: var(--teal-mid); }
 
-  .screen { display: none; min-height: 100vh; flex-direction: column; }
-  .screen.active { display: flex; }
+/* HOST QUESTION */
+.q-number { font-family: var(--mono); font-size: 11px; color: var(--muted); margin-bottom: 8px; }
+.q-text-host { font-size: 22px; font-weight: 500; line-height: 1.35; margin-bottom: 8px; }
+.q-text-player { font-size: 18px; font-weight: 500; line-height: 1.4; margin-bottom: 8px; }
+.q-tag { font-family: var(--mono); font-size: 11px; color: var(--teal); background: var(--teal-light); padding: 3px 10px; border-radius: 99px; display: inline-block; margin-bottom: 1.25rem; }
+.votes-status { font-family: var(--mono); font-size: 12px; color: var(--muted); margin-bottom: 1rem; }
 
-  /* HOST SCREEN */
-  .host { padding: 2rem; max-width: 700px; margin: 0 auto; width: 100%; }
-  .host-header { display: flex; align-items: baseline; gap: 12px; margin-bottom: 2rem; border-bottom: 0.5px solid var(--border); padding-bottom: 1.5rem; }
-  .host-logo { font-family: var(--mono); font-size: 13px; color: var(--teal); }
-  .host-title { font-size: 22px; font-weight: 500; }
+/* HOST OPTIONS */
+.host-opts { display: flex; flex-direction: column; gap: 8px; margin-bottom: 1.5rem; }
+.host-opt { background: var(--surface); border: 0.5px solid var(--border); border-radius: 12px; padding: 12px 16px; }
+.host-opt.leading { border-color: var(--teal); background: var(--teal-light); }
+.opt-top { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+.opt-letter { font-family: var(--mono); font-size: 12px; color: var(--teal); width: 18px; flex-shrink: 0; }
+.opt-text { flex: 1; font-size: 14px; font-weight: 500; }
+.opt-count { font-family: var(--mono); font-size: 12px; color: var(--teal); }
+.opt-bar-wrap { height: 5px; background: var(--border); border-radius: 99px; overflow: hidden; margin-bottom: 8px; }
+.opt-bar { height: 100%; background: var(--teal); border-radius: 99px; transition: width .4s; }
+.comments-list { display: flex; flex-direction: column; gap: 4px; }
+.comment-item { font-size: 12px; color: var(--muted); padding: 4px 8px; background: rgba(255,255,255,0.6); border-radius: 6px; }
+.comment-name { font-weight: 500; color: var(--text); }
 
-  .qr-box { background: var(--surface); border: 0.5px solid var(--border); border-radius: 16px; padding: 2rem; display: flex; gap: 2rem; align-items: center; margin-bottom: 2rem; }
-  .qr-wrap { background: white; padding: 12px; border-radius: 12px; border: 0.5px solid var(--border); flex-shrink: 0; }
-  .qr-info h2 { font-size: 16px; font-weight: 500; margin-bottom: 6px; }
-  .qr-info p { font-size: 13px; color: var(--text-muted); line-height: 1.6; }
-  .qr-url { font-family: var(--mono); font-size: 12px; color: var(--teal); margin-top: 8px; word-break: break-all; }
+/* PLAYER OPTIONS */
+.player-opts { display: flex; flex-direction: column; gap: 10px; margin-bottom: 1rem; }
+.player-opt-btn { padding: 14px 16px; border: 1.5px solid var(--border); border-radius: 12px; font-size: 15px; background: var(--bg); color: var(--text); cursor: pointer; text-align: left; transition: all .15s; font-family: inherit; }
+.player-opt-btn:hover { border-color: var(--teal); }
+.player-opt-btn.chosen { background: var(--teal-light); border-color: var(--teal); color: var(--teal-dark); font-weight: 500; }
+.comment-section { margin-bottom: 1.5rem; }
+.comment-label { font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+.voted-box { text-align: center; padding: 2rem 1rem; color: var(--muted); font-family: var(--mono); font-size: 13px; background: var(--surface); border-radius: 16px; }
 
-  .players-section h3 { font-family: var(--mono); font-size: 11px; color: var(--text-muted); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 12px; }
-  .players-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; margin-bottom: 1.5rem; min-height: 60px; }
-  .player-chip { background: var(--teal-light); border-radius: 8px; padding: 8px 12px; display: flex; align-items: center; gap: 8px; }
-  .player-avatar { width: 28px; height: 28px; border-radius: 50%; background: var(--teal); color: white; font-size: 11px; font-weight: 500; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-  .player-name { font-size: 13px; font-weight: 500; color: var(--teal-dark); }
+/* HOST NAV */
+.host-nav { display: flex; gap: 10px; }
+.host-nav .btn-ghost { flex: 1; }
+.host-nav .btn-primary { flex: 2; }
 
-  .waiting { font-size: 13px; color: var(--text-muted); font-family: var(--mono); padding: 12px 0; }
+/* RESULTS */
+.winner-card { background: var(--teal-light); border: 0.5px solid var(--teal); border-radius: 16px; padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 1rem; }
+.winner-badge { font-size: 32px; }
+.winner-name { font-size: 20px; font-weight: 500; color: var(--teal-dark); }
+.winner-score { font-family: var(--mono); font-size: 13px; color: var(--teal); margin-top: 2px; }
+.scoreboard { display: flex; flex-direction: column; gap: 6px; margin-bottom: 1.5rem; }
+.score-row { display: flex; align-items: center; gap: 12px; padding: 10px 14px; background: var(--surface); border-radius: 10px; }
+.score-row.me { background: var(--teal-light); }
+.score-rank { font-family: var(--mono); font-size: 13px; color: var(--muted); width: 22px; text-align: center; }
+.score-name { flex: 1; font-size: 14px; font-weight: 500; }
+.score-pts { font-family: var(--mono); font-size: 13px; color: var(--teal); }
+.q-summary { display: flex; flex-direction: column; gap: 10px; }
+.qs-card { background: var(--surface); border-radius: 12px; padding: 14px; }
+.qs-q { font-size: 13px; font-weight: 500; margin-bottom: 6px; }
+.qs-winner { font-size: 12px; color: var(--teal); font-family: var(--mono); margin-bottom: 6px; }
+.qs-comments { font-size: 12px; color: var(--muted); }
 
-  .start-btn { width: 100%; padding: 14px; background: var(--teal); color: white; border: none; border-radius: 12px; font-size: 15px; font-weight: 500; cursor: pointer; transition: background 0.15s; }
-  .start-btn:hover { background: var(--teal-dark); }
-  .start-btn:disabled { opacity: 0.4; cursor: default; }
-
-  /* QUESTION HOST VIEW */
-  .q-host { padding: 2rem; max-width: 700px; margin: 0 auto; width: 100%; }
-  .progress-bar-wrap { background: var(--surface); border-radius: 99px; height: 6px; margin-bottom: 2rem; overflow: hidden; }
-  .progress-bar-fill { height: 100%; background: var(--teal); border-radius: 99px; transition: width 0.4s ease; }
-  .q-number { font-family: var(--mono); font-size: 11px; color: var(--text-muted); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 8px; }
-  .q-text-big { font-size: 20px; font-weight: 500; line-height: 1.4; margin-bottom: 8px; }
-  .q-tag { font-family: var(--mono); font-size: 11px; color: var(--teal); background: var(--teal-light); padding: 3px 10px; border-radius: 99px; display: inline-block; margin-bottom: 1.5rem; }
-  .options-grid { display: grid; grid-template-columns: 1fr; gap: 8px; margin-bottom: 1.5rem; }
-  .option-row { background: var(--surface); border: 0.5px solid var(--border); border-radius: 12px; padding: 12px 16px; display: flex; align-items: center; gap: 12px; }
-  .option-row.leading { border-color: var(--teal); background: var(--teal-light); }
-  .opt-letter { font-family: var(--mono); font-size: 12px; color: var(--teal); width: 20px; }
-  .opt-text { flex: 1; font-size: 14px; }
-  .opt-bar-wrap { width: 120px; height: 6px; background: var(--border); border-radius: 99px; overflow: hidden; }
-  .opt-bar { height: 100%; background: var(--teal); border-radius: 99px; transition: width 0.4s; }
-  .opt-pct { font-family: var(--mono); font-size: 12px; color: var(--teal); width: 36px; text-align: right; }
-  .votes-live { font-size: 13px; color: var(--text-muted); font-family: var(--mono); margin-bottom: 1.5rem; }
-  .host-nav { display: flex; gap: 10px; }
-  .btn-sec { flex: 1; padding: 12px; border: 0.5px solid var(--border); border-radius: 12px; background: transparent; color: var(--text-muted); font-size: 14px; cursor: pointer; }
-  .btn-pri { flex: 2; padding: 12px; background: var(--teal); color: white; border: none; border-radius: 12px; font-size: 14px; font-weight: 500; cursor: pointer; }
-
-  /* PLAYER REGISTER */
-  .player-reg { padding: 2rem 1.5rem; max-width: 420px; margin: 0 auto; width: 100%; display: flex; flex-direction: column; gap: 1.5rem; }
-  .reg-logo { font-family: var(--mono); font-size: 12px; color: var(--teal); }
-  .reg-title { font-size: 24px; font-weight: 500; }
-  .reg-sub { font-size: 14px; color: var(--text-muted); }
-  .reg-input { width: 100%; padding: 14px 16px; border: 1.5px solid var(--border); border-radius: 12px; font-size: 16px; background: var(--bg); color: var(--text); outline: none; }
-  .reg-input:focus { border-color: var(--teal); }
-  .reg-btn { width: 100%; padding: 14px; background: var(--teal); color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: 500; cursor: pointer; }
-
-  /* PLAYER WAITING */
-  .player-wait { padding: 2rem 1.5rem; max-width: 420px; margin: 0 auto; width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; gap: 1.5rem; text-align: center; }
-  .wait-avatar { width: 72px; height: 72px; border-radius: 50%; background: var(--teal-light); color: var(--teal); font-size: 24px; font-weight: 500; display: flex; align-items: center; justify-content: center; }
-  .wait-name { font-size: 20px; font-weight: 500; }
-  .wait-sub { font-size: 14px; color: var(--text-muted); }
-  .pulse { width: 12px; height: 12px; border-radius: 50%; background: var(--teal); animation: pulse 1.4s infinite; }
-  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(0.8)} }
-
-  /* PLAYER VOTING */
-  .player-vote { padding: 1.5rem; max-width: 420px; margin: 0 auto; width: 100%; }
-  .pv-progress { display: flex; gap: 4px; margin-bottom: 1.5rem; }
-  .pv-dot { flex: 1; height: 4px; border-radius: 99px; background: var(--border); }
-  .pv-dot.done { background: var(--teal); }
-  .pv-dot.active { background: var(--teal-mid); }
-  .pv-q { font-size: 18px; font-weight: 500; line-height: 1.4; margin-bottom: 8px; }
-  .pv-tag { font-family: var(--mono); font-size: 11px; color: var(--teal); margin-bottom: 1.5rem; }
-  .pv-options { display: flex; flex-direction: column; gap: 10px; }
-  .pv-opt { padding: 14px 16px; border: 1.5px solid var(--border); border-radius: 12px; font-size: 15px; background: var(--bg); color: var(--text); cursor: pointer; text-align: left; transition: all 0.15s; }
-  .pv-opt:hover { border-color: var(--teal); }
-  .pv-opt.chosen { background: var(--teal-light); border-color: var(--teal); color: var(--teal-dark); font-weight: 500; }
-  .pv-voted { text-align: center; padding: 2rem; }
-  .pv-voted p { font-size: 14px; color: var(--text-muted); font-family: var(--mono); }
-
-  /* RESULTS */
-  .results { padding: 2rem; max-width: 700px; margin: 0 auto; width: 100%; }
-  .res-header { font-size: 22px; font-weight: 500; margin-bottom: 0.5rem; }
-  .res-sub { font-size: 14px; color: var(--text-muted); margin-bottom: 2rem; }
-  .winner-card { background: var(--teal-light); border: 0.5px solid var(--teal); border-radius: 16px; padding: 1.5rem; margin-bottom: 2rem; display: flex; align-items: center; gap: 1rem; }
-  .winner-badge { font-size: 28px; }
-  .winner-name { font-size: 20px; font-weight: 500; color: var(--teal-dark); }
-  .winner-score { font-family: var(--mono); font-size: 13px; color: var(--teal); }
-  .scoreboard { display: flex; flex-direction: column; gap: 8px; margin-bottom: 2rem; }
-  .score-row { display: flex; align-items: center; gap: 12px; padding: 10px 14px; background: var(--surface); border-radius: 10px; }
-  .score-rank { font-family: var(--mono); font-size: 13px; color: var(--text-muted); width: 24px; }
-  .score-av { width: 36px; height: 36px; border-radius: 50%; background: var(--teal); color: white; font-size: 12px; font-weight: 500; display: flex; align-items: center; justify-content: center; }
-  .score-name { flex: 1; font-size: 14px; font-weight: 500; }
-  .score-pts { font-family: var(--mono); font-size: 13px; color: var(--teal); }
-  .q-summary { display: flex; flex-direction: column; gap: 8px; }
-  .qs-card { background: var(--surface); border-radius: 12px; padding: 14px; }
-  .qs-q { font-size: 13px; font-weight: 500; margin-bottom: 6px; }
-  .qs-answer { font-size: 12px; color: var(--teal); font-family: var(--mono); }
+/* WAIT */
+.wait-center { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60vh; gap: 1rem; text-align: center; }
+.pulse { width: 10px; height: 10px; border-radius: 50%; background: var(--teal); animation: pulse 1.4s infinite; }
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(.8)} }
+.error-box { background: #fff0f0; border: 0.5px solid #ffcccc; border-radius: 10px; padding: 12px 16px; font-size: 13px; color: #c00; margin-bottom: 1rem; display: none; }
 </style>
 </head>
 <body>
 
 <!-- HOST: LOBBY -->
-<div class="screen active" id="screen-host-lobby">
-  <div class="host">
-    <div class="host-header">
-      <span class="host-logo">// vivicta AI seanse</span>
-      <span class="host-title">Spå AI-fremtiden</span>
+<div class="screen active" id="s-host-lobby">
+<div class="wrap">
+  <div class="logo">// vivicta AI seanse · juni 2026</div>
+  <h1>Spå AI-fremtiden</h1>
+  <div class="sub">Vis QR-koden på storskjermen. Alle scanner og registrerer seg — du ser dem dukke opp i sanntid.</div>
+  <div class="qr-box">
+    <div class="qr-wrap"><div id="qr-code"></div></div>
+    <div class="qr-info">
+      <h2>Scan for å delta</h2>
+      <div class="qr-url" id="qr-url-text" style="display:none"></div>
     </div>
-    <div class="qr-box">
-      <div class="qr-wrap" id="qr-code"></div>
-      <div class="qr-info">
-        <h2>Scan for å delta</h2>
-        <p>Alle i rommet scanner QR-koden og registrerer seg. Du ser dem dukke opp under.</p>
-        <div class="qr-url" id="qr-url-text"></div>
-      </div>
-    </div>
-    <div class="players-section">
-      <h3>// deltakere (<span id="player-count">0</span>)</h3>
-      <div class="players-grid" id="players-grid">
-        <div class="waiting">Venter på deltakere...</div>
-      </div>
-    </div>
-    <button class="start-btn" id="start-btn" onclick="hostStartGame()" disabled>
-      Start leken →
-    </button>
   </div>
+  <div class="label">// deltakere (<span id="lobby-count">0</span>)</div>
+  <div class="players-grid" id="lobby-players"><div style="color:var(--muted);font-size:13px;font-family:var(--mono)">Venter på deltakere...</div></div>
+  <button class="btn btn-primary" id="start-btn" style="width:100%" onclick="hostStart()" disabled>Start leken →</button>
+</div>
 </div>
 
-<!-- HOST: QUESTION VIEW -->
-<div class="screen" id="screen-host-question">
-  <div class="q-host">
-    <div class="progress-bar-wrap">
-      <div class="progress-bar-fill" id="host-progress"></div>
-    </div>
-    <div class="q-number" id="host-q-num"></div>
-    <div class="q-text-big" id="host-q-text"></div>
-    <div class="q-tag" id="host-q-tag"></div>
-    <div class="votes-live" id="host-votes-live"></div>
-    <div class="options-grid" id="host-options"></div>
-    <div class="host-nav">
-      <button class="btn-sec" onclick="hostPrev()">← Forrige</button>
-      <button class="btn-pri" id="host-next-btn" onclick="hostNext()">Neste →</button>
-    </div>
+<!-- HOST: QUESTION -->
+<div class="screen" id="s-host-q">
+<div class="wrap">
+  <div class="progress-wrap"><div class="progress-fill" id="host-prog"></div></div>
+  <div class="q-number" id="host-q-num"></div>
+  <div class="q-text-host" id="host-q-text"></div>
+  <div class="q-tag" id="host-q-tag"></div>
+  <div class="votes-status" id="host-votes-status"></div>
+  <div class="host-opts" id="host-opts"></div>
+  <div class="host-nav">
+    <button class="btn btn-ghost" onclick="hostPrev()">← Forrige</button>
+    <button class="btn btn-primary" id="host-next-btn" onclick="hostNext()">Neste →</button>
   </div>
+</div>
 </div>
 
 <!-- HOST: RESULTS -->
-<div class="screen" id="screen-host-results">
-  <div class="results">
-    <div class="res-header">Fasit — slik spådde dere fremtiden</div>
-    <div class="res-sub" id="res-sub"></div>
-    <div class="winner-card" id="winner-card"></div>
-    <div class="scoreboard" id="scoreboard"></div>
-    <h3 style="font-family:var(--mono);font-size:11px;color:var(--text-muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:12px;">// spørsmål og flertall</h3>
-    <div class="q-summary" id="q-summary"></div>
-  </div>
+<div class="screen" id="s-host-results">
+<div class="wrap">
+  <div class="logo">// resultater</div>
+  <h1>Fasit — slik spådde dere fremtiden</h1>
+  <div class="sub" id="host-res-sub"></div>
+  <div class="winner-card" id="host-winner"></div>
+  <div class="label">// poengtavle — flest ganger med flertallet</div>
+  <div class="scoreboard" id="host-scoreboard"></div>
+  <div class="label">// spørsmål og svar</div>
+  <div class="q-summary" id="host-q-summary"></div>
+</div>
 </div>
 
-<!-- PLAYER: REGISTER -->
-<div class="screen" id="screen-player-reg">
-  <div class="player-reg">
-    <div class="reg-logo">// vivicta AI seanse · 2026</div>
-    <div class="reg-title">Spå AI-fremtiden</div>
-    <div class="reg-sub">Registrer deg for å delta i leken</div>
-    <input class="reg-input" id="player-name-input" type="text" placeholder="Ditt navn..." maxlength="24" autofocus />
-    <button class="reg-btn" onclick="playerRegister()">Bli med →</button>
-  </div>
+<!-- PLAYER: JOIN -->
+<div class="screen" id="s-player-join">
+<div class="wrap-narrow" style="padding-top:3rem">
+  <div class="logo">// vivicta AI seanse · juni 2026</div>
+  <h1>Spå AI-fremtiden</h1>
+  <div class="sub">Skriv inn navnet ditt for å delta i leken.</div>
+  <div class="error-box" id="join-error"></div>
+  <input class="input" id="player-name" type="text" placeholder="Ditt navn..." maxlength="24" style="margin-bottom:1rem" />
+  <button class="btn btn-primary" style="width:100%" onclick="playerJoin()">Bli med →</button>
+</div>
 </div>
 
-<!-- PLAYER: WAITING -->
-<div class="screen" id="screen-player-wait">
-  <div class="player-wait">
-    <div class="wait-avatar" id="wait-avatar"></div>
-    <div class="wait-name" id="wait-name"></div>
+<!-- PLAYER: WAIT -->
+<div class="screen" id="s-player-wait">
+<div class="wrap-narrow">
+  <div class="wait-center">
+    <div class="avatar avatar-lg" id="wait-av"></div>
+    <div style="font-size:18px;font-weight:500" id="wait-name"></div>
     <div class="pulse"></div>
-    <div class="wait-sub">Venter på at verten starter leken...</div>
+    <div style="font-size:13px;color:var(--muted)">Venter på at verten starter...</div>
   </div>
 </div>
+</div>
 
-<!-- PLAYER: VOTING -->
-<div class="screen" id="screen-player-vote">
-  <div class="player-vote">
-    <div class="pv-progress" id="pv-progress"></div>
-    <div class="pv-q" id="pv-q-text"></div>
-    <div class="pv-tag" id="pv-q-tag"></div>
-    <div class="pv-options" id="pv-options"></div>
+<!-- PLAYER: VOTE -->
+<div class="screen" id="s-player-vote">
+<div class="wrap-narrow">
+  <div class="dots" id="player-dots"></div>
+  <div class="q-number" id="player-q-num"></div>
+  <div class="q-text-player" id="player-q-text"></div>
+  <div class="q-tag" id="player-q-tag"></div>
+  <div class="player-opts" id="player-opts"></div>
+  <div class="comment-section" id="comment-section" style="display:none">
+    <div class="comment-label">Legg til en kommentar (valgfritt)</div>
+    <textarea class="textarea" id="player-comment" placeholder="Hva tenker du på dette...?" maxlength="120"></textarea>
+    <button class="btn btn-primary" style="width:100%" onclick="playerSubmit()">Send svar →</button>
   </div>
+  <div class="voted-box" id="voted-box" style="display:none">✓ Stemt! Venter på neste spørsmål...</div>
+</div>
 </div>
 
 <!-- PLAYER: RESULTS -->
-<div class="screen" id="screen-player-results">
-  <div class="results">
-    <div class="res-header">Ferdig!</div>
-    <div class="res-sub" id="player-res-sub"></div>
-    <div class="winner-card" id="player-winner-card"></div>
-    <div class="scoreboard" id="player-scoreboard"></div>
-  </div>
+<div class="screen" id="s-player-results">
+<div class="wrap-narrow">
+  <div class="logo">// ferdig!</div>
+  <h1>Resultater</h1>
+  <div class="sub" id="player-res-sub"></div>
+  <div class="winner-card" id="player-winner"></div>
+  <div class="label" style="margin-top:1.5rem">// poengtavle</div>
+  <div class="scoreboard" id="player-scoreboard"></div>
+</div>
 </div>
 
 <script>
-const questions = [
-  { text: "Kan AI skrive en komplett D365 FO-implementering uten menneskelig hjelp?", tag: "erp · implementering", options: ["Ja, fullt ut", "Delvis — med veiledning", "Nei, ikke ennå"] },
-  { text: "Vil AI erstatte rollen som senior ERP-konsulent?", tag: "kompetanse · roller", options: ["Ja, fullstendig", "Delvis — nye roller vokser frem", "Nei — aldri"] },
-  { text: "Kan AI gjennomføre periodestenging i D365 autonomt?", tag: "agentic ERP · automatisering", options: ["Ja, rutinemessig", "I enkle tilfeller", "Nei — for komplekst"] },
-  { text: "Vil kundene forvente AI-drevet ERP som standard om 2 år?", tag: "marked · forventninger", options: ["Ja, absolutt", "Hos early adopters", "Nei — for tidlig"] },
-  { text: "Kan AI ta beslutninger i en M&A-integrasjon av to ERP-systemer?", tag: "kompleksitet · risiko", options: ["Ja, med tilsyn", "Bare anbefalinger", "Nei — for sensitiv"] },
-  { text: "Vil Copilot Studio erstatte tradisjonell Power Platform-utvikling?", tag: "copilot · power platform", options: ["Ja, i stor grad", "Supplement, ikke erstatter", "Nei — for begrenset"] },
-  { text: "Kan AI skrive en fullstendig kravspesifikasjon fra et møtereferat?", tag: "dokumentasjon · analyse", options: ["Ja, produksjonsklar", "Utkast som må justeres", "Nei — mangler kontekst"] },
-  { text: "Vil norske selskaper ha AI-ansvarlig (Chief AI Officer) som standard om 2 år?", tag: "organisasjon · ledelse", options: ["Ja, i de fleste", "Bare i tech-selskaper", "Nei — for tidlig"] },
-  { text: "Kan AI oppdage og varsle om regnskapssvindel i sanntid via ERP?", tag: "finans · compliance", options: ["Ja, pålitelig nok", "Delvis — som flagg", "Nei — for mange falske alarmer"] },
-  { text: "Om 2 år — er AI-satsingen til Microsoft Dynamics en fordel eller trussel for oss som konsulenter?", tag: "strategi · fremtid", options: ["Stor fordel", "Begge deler", "Potensiell trussel"] }
+const STORAGE_KEY = 'vivicta_ai_game_v3';
+const POLL_MS = 1500;
+
+const Qs = [
+  { text: "Kan AI skrive en komplett D365 FO-implementering uten menneskelig hjelp?", tag: "erp · implementering", opts: ["Ja, fullt ut", "Delvis — med veiledning", "Nei, ikke ennå"] },
+  { text: "Vil AI erstatte rollen som senior ERP-konsulent?", tag: "kompetanse · roller", opts: ["Ja, fullstendig", "Delvis — nye roller vokser frem", "Nei — aldri"] },
+  { text: "Kan AI gjennomføre periodestenging i D365 autonomt?", tag: "agentic ERP · automatisering", opts: ["Ja, rutinemessig", "I enkle tilfeller", "Nei — for komplekst"] },
+  { text: "Vil kundene forvente AI-drevet ERP som standard om 2 år?", tag: "marked · forventninger", opts: ["Ja, absolutt", "Hos early adopters", "Nei — for tidlig"] },
+  { text: "Kan AI ta beslutninger i en M&A-integrasjon av to ERP-systemer?", tag: "kompleksitet · risiko", opts: ["Ja, med tilsyn", "Bare anbefalinger", "Nei — for sensitiv"] },
+  { text: "Vil Copilot Studio erstatte tradisjonell Power Platform-utvikling?", tag: "copilot · power platform", opts: ["Ja, i stor grad", "Supplement — ikke erstatter", "Nei — for begrenset"] },
+  { text: "Kan AI skrive en fullstendig kravspesifikasjon fra et møtereferat?", tag: "dokumentasjon · analyse", opts: ["Ja, produksjonsklar", "Utkast som må justeres", "Nei — mangler kontekst"] },
+  { text: "Vil norske selskaper ha Chief AI Officer som standard om 2 år?", tag: "organisasjon · ledelse", opts: ["Ja, i de fleste", "Bare i tech-selskaper", "Nei — for tidlig"] },
+  { text: "Kan AI oppdage regnskapssvindel i sanntid via ERP?", tag: "finans · compliance", opts: ["Ja, pålitelig nok", "Delvis — som flagg", "Nei — for mange falske alarmer"] },
+  { text: "Er AI-satsingen til Microsoft Dynamics en fordel eller trussel for oss som konsulenter?", tag: "strategi · fremtid", opts: ["Stor fordel", "Begge deler", "Potensiell trussel"] }
 ];
 
-let state = {
-  mode: 'host',
-  players: {},
-  votes: {},
-  currentQ: 0,
-  gameStarted: false,
-  gameEnded: false,
-  myName: '',
-  myVotes: {}
-};
-
-function initials(name) {
-  return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+// --- STORAGE ---
+async function load() {
+  try { const r = await window.storage.get(STORAGE_KEY, true); return r ? JSON.parse(r.value) : null; }
+  catch(e) { const s = localStorage.getItem(STORAGE_KEY); return s ? JSON.parse(s) : null; }
+}
+async function save(state) {
+  const v = JSON.stringify(state);
+  try { await window.storage.set(STORAGE_KEY, v, true); } catch(e) {}
+  localStorage.setItem(STORAGE_KEY, v);
+}
+function defaultState() {
+  return { phase:'lobby', players:{}, votes:{}, playerVotes:{}, comments:{}, currentQ:0, gameEnded:false };
 }
 
-function showScreen(id) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
+// --- HELPERS ---
+function initials(n) { return n.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2); }
+function show(id) { document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active')); document.getElementById(id).classList.add('active'); }
+function el(id) { return document.getElementById(id); }
+function myId() { return localStorage.getItem('my_pid'); }
+function myName() { return localStorage.getItem('my_pname'); }
+
+let selectedOpt = null;
+
+// --- HOST ---
+async function hostInit() {
+  let state = await load();
+  if (!state) { state = defaultState(); await save(state); }
+
+  const base = window.location.href.split('?')[0];
+  const joinUrl = base + '?join=1';
+  el('qr-url-text').textContent = joinUrl;
+  const qrImg = document.createElement('img');
+  qrImg.src = 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&color=0F6E56&data=' + encodeURIComponent(joinUrl);
+  qrImg.style.cssText = 'width:150px;height:150px;display:block;border-radius:4px';
+  el('qr-code').appendChild(qrImg);
+
+  if (state.gameEnded) { show('s-host-results'); renderHostResults(state); return; }
+  if (state.phase === 'playing') { show('s-host-q'); renderHostQ(state); }
+  hostPoll();
 }
 
-function isHost() {
-  return !window.location.search.includes('player');
-}
-
-window.onload = function() {
-  const url = window.location.href.split('?')[0] + '?player=1';
-  document.getElementById('qr-url-text').textContent = url;
-
-  if (typeof QRCode !== 'undefined') {
-    new QRCode(document.getElementById('qr-code'), {
-      text: url,
-      width: 140,
-      height: 140,
-      colorDark: '#0F6E56',
-      colorLight: '#ffffff',
-      correctLevel: QRCode.CorrectLevel.M
-    });
+let hostPolling = true;
+async function hostPoll() {
+  if (!hostPolling) return;
+  const state = await load();
+  if (state) {
+    if (state.gameEnded) { show('s-host-results'); renderHostResults(state); return; }
+    if (state.phase === 'lobby') { show('s-host-lobby'); renderLobby(state); }
+    if (state.phase === 'playing') { show('s-host-q'); renderHostQ(state); }
   }
-
-  if (window.location.search.includes('player')) {
-    state.mode = 'player';
-    showScreen('screen-player-reg');
-  } else {
-    state.mode = 'host';
-    showScreen('screen-host-lobby');
-    pollState();
-  }
-};
-
-function saveState() {
-  localStorage.setItem('ai_game_state', JSON.stringify(state));
+  setTimeout(hostPoll, POLL_MS);
 }
 
-function loadState() {
-  const s = localStorage.getItem('ai_game_state');
-  if (s) state = JSON.parse(s);
-}
-
-function pollState() {
-  if (state.mode !== 'host') return;
-  loadState();
-  renderLobby();
-  if (state.gameStarted && !state.gameEnded) {
-    showScreen('screen-host-question');
-    renderHostQuestion();
-  } else if (state.gameEnded) {
-    showScreen('screen-host-results');
-    renderHostResults();
-  }
-  setTimeout(pollState, 1200);
-}
-
-function pollPlayerState() {
-  loadState();
-  if (state.gameEnded) {
-    showScreen('screen-player-results');
-    renderPlayerResults();
-    return;
-  }
-  if (state.gameStarted) {
-    showScreen('screen-player-vote');
-    renderPlayerVote();
-  }
-  setTimeout(pollPlayerState, 1200);
-}
-
-function renderLobby() {
+function renderLobby(state) {
   const players = Object.values(state.players);
-  document.getElementById('player-count').textContent = players.length;
-  const grid = document.getElementById('players-grid');
-  if (players.length === 0) {
-    grid.innerHTML = '<div class="waiting">Venter på deltakere...</div>';
-  } else {
-    grid.innerHTML = players.map(p => `
-      <div class="player-chip">
-        <div class="player-avatar">${initials(p.name)}</div>
-        <div class="player-name">${p.name}</div>
-      </div>
-    `).join('');
-  }
-  document.getElementById('start-btn').disabled = players.length < 1;
+  el('lobby-count').textContent = players.length;
+  el('lobby-players').innerHTML = players.length === 0
+    ? '<div style="color:var(--muted);font-size:13px;font-family:var(--mono)">Venter på deltakere...</div>'
+    : players.map(p=>`<div class="player-chip"><div class="avatar">${initials(p.name)}</div><span style="font-size:13px;font-weight:500;color:var(--teal-dark)">${p.name}</span></div>`).join('');
+  el('start-btn').disabled = players.length < 1;
 }
 
-function playerRegister() {
-  const name = document.getElementById('player-name-input').value.trim();
-  if (!name) return;
-  loadState();
-  const id = 'p_' + Date.now();
-  state.players[id] = { id, name, score: 0 };
-  state.myId = id;
-  state.myName = name;
-  saveState();
-  localStorage.setItem('my_player_id', id);
-  localStorage.setItem('my_player_name', name);
-  document.getElementById('wait-avatar').textContent = initials(name);
-  document.getElementById('wait-name').textContent = name;
-  showScreen('screen-player-wait');
-  pollPlayerState();
+async function hostStart() {
+  const state = await load();
+  state.phase = 'playing'; state.currentQ = 0;
+  await save(state);
+  show('s-host-q'); renderHostQ(state);
 }
 
-function hostStartGame() {
-  loadState();
-  state.gameStarted = true;
-  state.currentQ = 0;
-  state.votes = {};
-  saveState();
-  showScreen('screen-host-question');
-  renderHostQuestion();
-}
+function renderHostQ(state) {
+  const qi = state.currentQ; const q = Qs[qi]; const total = Qs.length;
+  el('host-prog').style.width = ((qi+1)/total*100)+'%';
+  el('host-q-num').textContent = `// spørsmål ${qi+1} av ${total}`;
+  el('host-q-text').textContent = q.text;
+  el('host-q-tag').textContent = q.tag;
 
-function renderHostQuestion() {
-  loadState();
-  const q = questions[state.currentQ];
-  const total = questions.length;
-  document.getElementById('host-progress').style.width = ((state.currentQ + 1) / total * 100) + '%';
-  document.getElementById('host-q-num').textContent = `// spørsmål ${state.currentQ + 1} av ${total}`;
-  document.getElementById('host-q-text').textContent = q.text;
-  document.getElementById('host-q-tag').textContent = q.tag;
-
-  const qVotes = state.votes[state.currentQ] || {};
-  const totalVotes = Object.values(qVotes).reduce((a, b) => a + b, 0);
+  const qv = state.votes[qi]||{};
+  const totalVotes = Object.values(qv).reduce((a,b)=>a+b,0);
   const totalPlayers = Object.keys(state.players).length;
-  document.getElementById('host-votes-live').textContent = `${totalVotes} av ${totalPlayers} har stemt`;
+  el('host-votes-status').textContent = `${totalVotes} av ${totalPlayers} har stemt`;
 
-  const maxV = Math.max(...q.options.map((_, i) => qVotes[i] || 0), 1);
-  document.getElementById('host-options').innerHTML = q.options.map((o, i) => {
-    const v = qVotes[i] || 0;
-    const pct = totalVotes > 0 ? Math.round(v / totalVotes * 100) : 0;
-    const leading = v === maxV && v > 0;
-    return `<div class="option-row ${leading ? 'leading' : ''}">
-      <div class="opt-letter">${String.fromCharCode(65 + i)}</div>
-      <div class="opt-text">${o}</div>
+  const maxV = Math.max(...q.opts.map((_,i)=>qv[i]||0), 1);
+  const allComments = state.comments[qi]||{};
+
+  el('host-opts').innerHTML = q.opts.map((o,i)=>{
+    const v = qv[i]||0;
+    const pct = totalVotes>0 ? Math.round(v/totalVotes*100) : 0;
+    const lead = v===maxV && v>0;
+    const optComments = Object.entries(allComments)
+      .filter(([pid,c])=>c.opt===i && c.text)
+      .map(([pid,c])=>`<div class="comment-item"><span class="comment-name">${state.players[pid]?state.players[pid].name:'?'}:</span> ${escHtml(c.text)}</div>`)
+      .join('');
+    return `<div class="host-opt ${lead?'leading':''}">
+      <div class="opt-top">
+        <div class="opt-letter">${String.fromCharCode(65+i)}</div>
+        <div class="opt-text">${o}</div>
+        <div class="opt-count">${v} ${v===1?'stemme':'stemmer'} · ${pct}%</div>
+      </div>
       <div class="opt-bar-wrap"><div class="opt-bar" style="width:${pct}%"></div></div>
-      <div class="opt-pct">${pct}%</div>
+      ${optComments ? `<div class="comments-list" style="margin-top:8px">${optComments}</div>` : ''}
     </div>`;
   }).join('');
 
-  document.getElementById('host-next-btn').textContent = state.currentQ === total - 1 ? 'Se resultater →' : 'Neste →';
-
-  setTimeout(() => { if (state.gameStarted && !state.gameEnded) renderHostQuestion(); }, 1500);
+  el('host-next-btn').textContent = qi===total-1 ? 'Se resultater →' : 'Neste →';
 }
 
-function hostPrev() {
-  if (state.currentQ > 0) { state.currentQ--; saveState(); renderHostQuestion(); }
+function escHtml(t) { return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+async function hostPrev() {
+  const state = await load();
+  if (state.currentQ>0) { state.currentQ--; await save(state); renderHostQ(state); }
+}
+async function hostNext() {
+  const state = await load();
+  if (state.currentQ<Qs.length-1) { state.currentQ++; await save(state); renderHostQ(state); }
+  else { calcScores(state); state.gameEnded=true; await save(state); show('s-host-results'); renderHostResults(state); }
 }
 
-function hostNext() {
-  loadState();
-  if (state.currentQ < questions.length - 1) {
-    state.currentQ++;
-    saveState();
-    renderHostQuestion();
-  } else {
-    calcScores();
-    state.gameEnded = true;
-    saveState();
-    showScreen('screen-host-results');
-    renderHostResults();
-  }
-}
-
-function calcScores() {
-  Object.keys(state.players).forEach(pid => {
-    state.players[pid].score = 0;
-  });
-  questions.forEach((_, qi) => {
-    const qVotes = state.votes[qi] || {};
-    const maxV = Math.max(...Object.values(qVotes), 0);
-    if (maxV === 0) return;
-    const winningIdx = Object.keys(qVotes).find(k => qVotes[k] === maxV);
-    Object.keys(state.players).forEach(pid => {
-      const playerVotes = state.playerVotes || {};
-      const pv = playerVotes[pid] || {};
-      if (String(pv[qi]) === String(winningIdx)) {
-        state.players[pid].score = (state.players[pid].score || 0) + 1;
-      }
+function calcScores(state) {
+  Object.keys(state.players).forEach(pid=>{ state.players[pid].score=0; });
+  Qs.forEach((_,qi)=>{
+    const qv = state.votes[qi]||{};
+    const maxV = Math.max(...Object.values(qv),0);
+    if (!maxV) return;
+    const winIdx = Object.keys(qv).find(k=>qv[k]===maxV);
+    Object.keys(state.players).forEach(pid=>{
+      const pv = (state.playerVotes[pid]||{});
+      if (String(pv[qi])===String(winIdx)) state.players[pid].score=(state.players[pid].score||0)+1;
     });
   });
 }
 
-function renderHostResults() {
-  loadState();
-  const players = Object.values(state.players).sort((a, b) => b.score - a.score);
-  const winner = players[0];
-  document.getElementById('res-sub').textContent = `${players.length} deltakere · ${questions.length} spørsmål`;
-  document.getElementById('winner-card').innerHTML = `
-    <div class="winner-badge">🏆</div>
-    <div><div class="winner-name">${winner ? winner.name : '—'}</div>
-    <div class="winner-score">${winner ? winner.score : 0} av ${questions.length} rette svar</div></div>`;
-  document.getElementById('scoreboard').innerHTML = players.map((p, i) => `
-    <div class="score-row">
-      <div class="score-rank">${i + 1}</div>
-      <div class="score-av">${initials(p.name)}</div>
-      <div class="score-name">${p.name}</div>
-      <div class="score-pts">${p.score} pts</div>
-    </div>`).join('');
-  document.getElementById('q-summary').innerHTML = questions.map((q, qi) => {
-    const qVotes = state.votes[qi] || {};
-    const total = Object.values(qVotes).reduce((a, b) => a + b, 0) || 1;
-    let maxI = 0, maxV = 0;
-    q.options.forEach((_, i) => { if ((qVotes[i] || 0) > maxV) { maxV = qVotes[i] || 0; maxI = i; } });
-    const pct = Math.round(maxV / total * 100);
+function renderHostResults(state) {
+  const players = Object.values(state.players).sort((a,b)=>b.score-a.score);
+  const w = players[0];
+  el('host-res-sub').textContent = `${players.length} deltakere · ${Qs.length} spørsmål · vinner: den som stemte oftest med flertallet`;
+  el('host-winner').innerHTML = `<div class="winner-badge">🏆</div><div><div class="winner-name">${w?w.name:'—'}</div><div class="winner-score">Stemte med flertallet ${w?w.score:0} av ${Qs.length} ganger</div></div>`;
+  el('host-scoreboard').innerHTML = players.map((p,i)=>`
+    <div class="score-row"><div class="score-rank">${['🥇','🥈','🥉'][i]||i+1}</div><div class="avatar">${initials(p.name)}</div><div class="score-name">${p.name}</div><div class="score-pts">${p.score}/${Qs.length}</div></div>`).join('');
+  el('host-q-summary').innerHTML = Qs.map((q,qi)=>{
+    const qv=state.votes[qi]||{}; const tot=Object.values(qv).reduce((a,b)=>a+b,0)||1;
+    let maxI=0,maxV=0; q.opts.forEach((_,i)=>{ if((qv[i]||0)>maxV){maxV=qv[i]||0;maxI=i;} });
+    const allC = state.comments[qi]||{};
+    const commentsList = Object.entries(allC).filter(([,c])=>c.text).map(([pid,c])=>`${state.players[pid]?state.players[pid].name:'?'}: "${escHtml(c.text)}"`).join(' · ');
     return `<div class="qs-card">
       <div class="qs-q">${q.text}</div>
-      <div class="qs-answer">Flertall: ${q.options[maxI]} (${pct}%)</div>
+      <div class="qs-winner">Flertall: ${q.opts[maxI]} (${Math.round(maxV/tot*100)}%)</div>
+      ${commentsList?`<div class="qs-comments">${commentsList}</div>`:''}
     </div>`;
   }).join('');
 }
 
-function renderPlayerVote() {
-  loadState();
-  const myId = localStorage.getItem('my_player_id');
-  const qi = state.currentQ;
-  const q = questions[qi];
-  const myVotes = (state.playerVotes || {})[myId] || {};
-  const alreadyVoted = myVotes[qi] !== undefined;
-
-  document.getElementById('pv-progress').innerHTML = questions.map((_, i) => {
-    let cls = i < qi ? 'done' : i === qi ? 'active' : '';
-    return `<div class="pv-dot ${cls}"></div>`;
-  }).join('');
-
-  document.getElementById('pv-q-text').textContent = q.text;
-  document.getElementById('pv-q-tag').textContent = '// ' + q.tag;
-
-  document.getElementById('pv-options').innerHTML = alreadyVoted
-    ? `<div class="pv-voted"><p>Stemt! Venter på neste spørsmål...</p></div>`
-    : q.options.map((o, i) => `
-      <button class="pv-opt" onclick="playerVote(${i})">${o}</button>
-    `).join('');
+// --- PLAYER ---
+async function playerInit() {
+  const id = myId();
+  if (id) {
+    el('wait-av').textContent = initials(myName()||'?');
+    el('wait-name').textContent = myName()||'';
+    show('s-player-wait');
+    playerPoll();
+  } else {
+    show('s-player-join');
+  }
 }
 
-function playerVote(optIdx) {
-  loadState();
-  const myId = localStorage.getItem('my_player_id');
-  const qi = state.currentQ;
-  if (!state.playerVotes) state.playerVotes = {};
-  if (!state.playerVotes[myId]) state.playerVotes[myId] = {};
-  if (state.playerVotes[myId][qi] !== undefined) return;
-  state.playerVotes[myId][qi] = optIdx;
-  if (!state.votes[qi]) state.votes[qi] = {};
-  state.votes[qi][optIdx] = (state.votes[qi][optIdx] || 0) + 1;
-  saveState();
-  renderPlayerVote();
+async function playerJoin() {
+  const name = el('player-name').value.trim();
+  if (!name) return;
+  const state = await load();
+  if (!state) { showErr('join-error','Finner ikke spillet. Be verten starte på nytt.'); return; }
+  if (state.phase!=='lobby') { showErr('join-error','Spillet er allerede i gang — vent på neste runde.'); return; }
+  const id = 'p_'+Date.now()+'_'+Math.random().toString(36).slice(2,5);
+  state.players[id]={id,name,score:0};
+  await save(state);
+  localStorage.setItem('my_pid',id);
+  localStorage.setItem('my_pname',name);
+  el('wait-av').textContent=initials(name);
+  el('wait-name').textContent=name;
+  show('s-player-wait');
+  playerPoll();
 }
 
-function renderPlayerResults() {
-  loadState();
-  const players = Object.values(state.players).sort((a, b) => b.score - a.score);
-  const winner = players[0];
-  const myId = localStorage.getItem('my_player_id');
-  const me = state.players[myId];
-  document.getElementById('player-res-sub').textContent = `Du fikk ${me ? me.score : 0} av ${questions.length} rette`;
-  document.getElementById('player-winner-card').innerHTML = `
-    <div class="winner-badge">🏆</div>
-    <div><div class="winner-name">${winner ? winner.name : '—'}</div>
-    <div class="winner-score">${winner ? winner.score : 0} av ${questions.length}</div></div>`;
-  document.getElementById('player-scoreboard').innerHTML = players.map((p, i) => `
-    <div class="score-row ${p.id === myId ? 'style="background:#E1F5EE"' : ''}">
-      <div class="score-rank">${i + 1}</div>
-      <div class="score-av">${initials(p.name)}</div>
-      <div class="score-name">${p.name}</div>
-      <div class="score-pts">${p.score} pts</div>
-    </div>`).join('');
+function showErr(id,msg){const e=el(id);e.textContent=msg;e.style.display='block';}
+
+let playerPolling=true;
+async function playerPoll() {
+  if(!playerPolling) return;
+  const state = await load();
+  if (state) {
+    if (state.gameEnded) { show('s-player-results'); renderPlayerResults(state); return; }
+    if (state.phase==='playing') { show('s-player-vote'); renderPlayerVote(state); }
+  }
+  setTimeout(playerPoll, POLL_MS);
 }
+
+function renderPlayerVote(state) {
+  const qi=state.currentQ; const q=Qs[qi]; const id=myId();
+  const myVotes=(state.playerVotes[id]||{});
+  const voted=myVotes[qi]!==undefined;
+
+  el('player-dots').innerHTML=Qs.map((_,i)=>`<div class="dot ${i<qi?'done':i===qi?'active':''}"></div>`).join('');
+  el('player-q-num').textContent=`// spørsmål ${qi+1} av ${Qs.length}`;
+  el('player-q-text').textContent=q.text;
+  el('player-q-tag').textContent='// '+q.tag;
+
+  if (voted) {
+    el('player-opts').innerHTML='';
+    el('comment-section').style.display='none';
+    el('voted-box').style.display='block';
+  } else {
+    selectedOpt=null;
+    el('player-opts').innerHTML=q.opts.map((o,i)=>`<button class="player-opt-btn" onclick="selectOpt(${i},this)">${o}</button>`).join('');
+    el('comment-section').style.display='none';
+    el('voted-box').style.display='none';
+    el('player-comment').value='';
+  }
+}
+
+function selectOpt(i, btn) {
+  document.querySelectorAll('.player-opt-btn').forEach(b=>b.classList.remove('chosen'));
+  btn.classList.add('chosen');
+  selectedOpt=i;
+  el('comment-section').style.display='block';
+}
+
+async function playerSubmit() {
+  if (selectedOpt===null) return;
+  const state=await load();
+  const id=myId(); const qi=state.currentQ;
+  if (!state.playerVotes[id]) state.playerVotes[id]={};
+  if (state.playerVotes[id][qi]!==undefined) return;
+  state.playerVotes[id][qi]=selectedOpt;
+  if (!state.votes[qi]) state.votes[qi]={};
+  state.votes[qi][selectedOpt]=(state.votes[qi][selectedOpt]||0)+1;
+  const comment=el('player-comment').value.trim();
+  if (!state.comments[qi]) state.comments[qi]={};
+  state.comments[qi][id]={opt:selectedOpt, text:comment};
+  await save(state);
+  el('comment-section').style.display='none';
+  el('voted-box').style.display='block';
+  el('player-opts').querySelectorAll('button').forEach(b=>b.disabled=true);
+}
+
+function renderPlayerResults(state) {
+  const id=myId(); const me=state.players[id];
+  const players=Object.values(state.players).sort((a,b)=>b.score-a.score);
+  const w=players[0];
+  el('player-res-sub').textContent=`Du stemte med flertallet ${me?me.score:0} av ${Qs.length} ganger`;
+  el('player-winner').innerHTML=`<div class="winner-badge">🏆</div><div><div class="winner-name">${w?w.name:'—'}</div><div class="winner-score">Flertall ${w?w.score:0}/${Qs.length} ganger</div></div>`;
+  el('player-scoreboard').innerHTML=players.map((p,i)=>`
+    <div class="score-row ${p.id===id?'me':''}"><div class="score-rank">${['🥇','🥈','🥉'][i]||i+1}</div><div class="avatar">${initials(p.name)}</div><div class="score-name">${p.name}</div><div class="score-pts">${p.score}/${Qs.length}</div></div>`).join('');
+}
+
+// --- INIT ---
+window.onload = async function() {
+  if (window.location.search.includes('join=1')) { await playerInit(); }
+  else { await hostInit(); }
+};
 </script>
 </body>
 </html>
