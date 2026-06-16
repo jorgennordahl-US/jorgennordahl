@@ -10,6 +10,20 @@ export type Article = {
 export async function getArticles(): Promise<Article[]> {
   return [
     {
+      slug: 'incentive-based-business-models-vested-partnership',
+      title: 'Forretningsmodeller for insentivbasert avlønning',
+      date: 'jun 2026',
+      tag: 'business-model',
+      excerpt: 'Hvordan vested partnerskap og insentivbasert avlønning kan skape sterkere alignment mellom leverandør og kunde.',
+    },
+    {
+      slug: 'risk-sharing-contracts-incentive-partnerships',
+      title: 'Kontrakter for risikodeling og insentivbaserte partnerskap',
+      date: 'jun 2026',
+      tag: 'contracts',
+      excerpt: 'Hvilke kontraktsmodeller støtter reell risikodeling mellom partnere — og hvordan strukturere insentiver som varer.',
+    },
+    {
       slug: 'from-erp-to-autonomous-agents',
       title: 'From ERP to autonomous agents',
       date: 'jun 2025',
