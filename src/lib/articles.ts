@@ -11,17 +11,17 @@ export async function getArticles(): Promise<Article[]> {
   return [
     {
       slug: 'incentive-based-business-models-vested-partnership',
-      title: 'Forretningsmodeller for insentivbasert avlønning',
+      title: 'Business models for incentive-based compensation',
       date: 'jun 2026',
       tag: 'business-model',
-      excerpt: 'Hvordan vested partnerskap og insentivbasert avlønning kan skape sterkere alignment mellom leverandør og kunde.',
+      excerpt: 'How vested partnerships and incentive-based compensation can create stronger alignment between vendor and client.',
     },
     {
       slug: 'risk-sharing-contracts-incentive-partnerships',
-      title: 'Kontrakter for risikodeling og insentivbaserte partnerskap',
+      title: 'Contracts for risk-sharing and incentive-based partnerships',
       date: 'jun 2026',
       tag: 'contracts',
-      excerpt: 'Hvilke kontraktsmodeller støtter reell risikodeling mellom partnere — og hvordan strukturere insentiver som varer.',
+      excerpt: 'Which contract models support real risk-sharing between partners — and how to structure incentives that last.',
     },
     {
       slug: 'from-erp-to-autonomous-agents',
